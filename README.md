@@ -35,7 +35,6 @@ your repo access and to practice PR'ing with your team *before* you start
 coding!
 
 - Ruth Igwe-Oruta: [[GitHub](https://github.com/ghaccountname)](https://github.com/Xondacc) / [[LinkedIn](https://linkedin.com/in/liaccountname)](https://www.linkedin.com/in/ruthigwe-oruta)
-- Teammate name #2: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
-
+- Cristian Torres: [GitHub](https://github.com/cristiantorresf19191919)
    ...
 - Teammate name #n: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
