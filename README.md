@@ -37,4 +37,4 @@ coding!
 - Ruth Igwe-Oruta: [[GitHub](https://github.com/ghaccountname)](https://github.com/Xondacc) / [[LinkedIn](https://linkedin.com/in/liaccountname)](https://www.linkedin.com/in/ruthigwe-oruta)
 - Cristian Torres: [GitHub](https://github.com/cristiantorresf19191919)
    ...
-- Vincent Bui: [GitHub]((https://github.com/VincentBui0)) / [LinkedIn](https://www.linkedin.com/in/vincent-bui0/))
+- Vincent Bui: [[GitHub]((https://github.com/VincentBui0)] / [[LinkedIn](https://www.linkedin.com/in/vincent-bui0/)]
