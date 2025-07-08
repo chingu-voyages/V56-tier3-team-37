@@ -38,4 +38,4 @@ coding!
 - Cristian Torres: [GitHub](https://github.com/cristiantorresf19191919)
 - Jessica Hackett: [GitHub](https://github.com/mooglemoxie0018) / [[LinkedIn](https://www.linkedin.com/in/jessica-hackett/)]
 - Vincent Bui: [[GitHub]((https://github.com/VincentBui0)] / [[LinkedIn](https://www.linkedin.com/in/vincent-bui0/)]
-- Dorene St.Marthe: [GitHub](https://github.com/Dorene-StMarthe) / [[LinkedIn](https://www.linkedin.com/in/dorenestmarthe/)]
+- Dorene St.Marthe: [GitHub](https://github.com/Dorene-StMarthe) / [LinkedIn](https://www.linkedin.com/in/dorenestmarthe/)
