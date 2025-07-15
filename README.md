@@ -36,6 +36,8 @@ coding!
 
 - Ruth Igwe-Oruta: [[GitHub](https://github.com/ghaccountname)](https://github.com/Xondacc) / [[LinkedIn](https://linkedin.com/in/liaccountname)](https://www.linkedin.com/in/ruthigwe-oruta)
 - Cristian Torres: [GitHub](https://github.com/cristiantorresf19191919)
+- Syed Affan: [[GitHub](https://github.com/affan880)](https://github.com/affan880) / [[LinkedIn](https://linkedin.com/in/syed-affan)]
+- Teammate name #n: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
 - Jessica Hackett: [GitHub](https://github.com/mooglemoxie0018) / [[LinkedIn](https://www.linkedin.com/in/jessica-hackett/)]
 - Vincent Bui: [[GitHub]((https://github.com/VincentBui0)] / [[LinkedIn](https://www.linkedin.com/in/vincent-bui0/)]
 - Dorene St.Marthe: [GitHub](https://github.com/Dorene-StMarthe) / [LinkedIn](https://www.linkedin.com/in/dorenestmarthe/)
