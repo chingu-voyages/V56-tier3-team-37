@@ -1,0 +1,706 @@
+// =============================================================================
+// SURGERY STATUS APP - BEM METHODOLOGY WITH SCSS
+// =============================================================================
+
+// Import Tailwind CSS
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// =============================================================================
+// VARIABLES
+// =============================================================================
+
+// Colors
+$color-primary: #3b82f6;
+$color-secondary: #64748b;
+$color-success: #10b981;
+$color-warning: #f59e0b;
+$color-error: #ef4444;
+$color-info: #06b6d4;
+
+// Typography
+$font-family-base: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-family-mono: 'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+
+// Spacing
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+$spacing-2xl: 3rem;
+
+// Breakpoints
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+
+// =============================================================================
+// MIXINS
+// =============================================================================
+
+@mixin respond-to($breakpoint) {
+    @if $breakpoint ==sm {
+        @media (min-width: $breakpoint-sm) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==md {
+        @media (min-width: $breakpoint-md) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==lg {
+        @media (min-width: $breakpoint-lg) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==xl {
+        @media (min-width: $breakpoint-xl) {
+            @content;
+        }
+    }
+}
+
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin card-shadow {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+// =============================================================================
+// BASE STYLES
+// =============================================================================
+
+:root {
+    --background: #ffffff;
+    --foreground: #171717;
+    --color-primary: #{$color-primary};
+    --color-secondary: #{$color-secondary};
+    --color-success: #{$color-success};
+    --color-warning: #{$color-warning};
+    --color-error: #{$color-error};
+    --color-info: #{$color-info};
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #0a0a0a;
+        --foreground: #ededed;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: $font-family-base;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#__next {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+// Utility classes for spacing
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.mb-8 {
+    margin-bottom: 2rem;
+}
+
+.mb-12 {
+    margin-bottom: 3rem;
+}
+
+.py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.py-16 {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+.space-y-4>*+* {
+    margin-top: 1rem;
+}
+
+// =============================================================================
+// LAYOUT COMPONENTS
+// =============================================================================
+
+// Header Component
+.header {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 100;
+
+    &__container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 $spacing-md;
+    }
+
+    &__navbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: $spacing-md 0;
+        min-height: 4rem;
+    }
+
+    &__brand {
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-decoration: none;
+        color: white;
+
+        &:hover {
+            opacity: 0.9;
+        }
+    }
+
+    &__nav {
+        display: none;
+
+        @include respond-to(lg) {
+            display: flex;
+            align-items: center;
+            gap: $spacing-md;
+        }
+
+        &-item {
+            color: white;
+            text-decoration: none;
+            padding: $spacing-sm $spacing-md;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s;
+
+            &:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+        }
+    }
+
+    &__user-menu {
+        position: relative;
+    }
+
+    &__avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: border-color 0.2s;
+
+        &:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+    }
+
+    &__dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        min-width: 200px;
+        z-index: 1000;
+        margin-top: $spacing-sm;
+
+        &-item {
+            display: block;
+            padding: $spacing-sm $spacing-md;
+            color: #374151;
+            text-decoration: none;
+            border-bottom: 1px solid #f3f4f6;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            &:hover {
+                background-color: #f9fafb;
+            }
+        }
+    }
+}
+
+// Footer Component
+.footer {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: $spacing-xl 0;
+    margin-top: auto;
+
+    &__container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 $spacing-md;
+        text-align: center;
+    }
+
+    &__text {
+        font-size: 0.875rem;
+        margin-bottom: $spacing-sm;
+    }
+
+    &__subtext {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+}
+
+// =============================================================================
+// PAGE COMPONENTS
+// =============================================================================
+
+// Hero Section
+.hero {
+    min-height: 60vh;
+    background: #f3f4f6;
+    @include flex-center;
+    padding: $spacing-2xl 0;
+
+    &__content {
+        text-align: center;
+        max-width: 32rem;
+        padding: 0 $spacing-md;
+    }
+
+    &__title {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: $spacing-lg;
+        color: #1f2937;
+
+        @include respond-to(sm) {
+            font-size: 3.75rem;
+        }
+    }
+
+    &__description {
+        font-size: 1.125rem;
+        line-height: 1.75;
+        margin-bottom: $spacing-xl;
+        color: #6b7280;
+    }
+
+    &__actions {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-md;
+        align-items: center;
+
+        @include respond-to(sm) {
+            flex-direction: row;
+            justify-content: center;
+        }
+    }
+}
+
+// Card Component
+.card {
+    background: white;
+    border-radius: 0.5rem;
+    @include card-shadow;
+    border: 1px solid #e5e7eb;
+
+    &__body {
+        padding: $spacing-xl;
+    }
+
+    &__title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: $spacing-md;
+        color: #1f2937;
+    }
+
+    &__content {
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    &__actions {
+        margin-top: $spacing-lg;
+        display: flex;
+        gap: $spacing-sm;
+        justify-content: flex-end;
+    }
+
+    // Card variants
+    &--feature {
+        text-align: center;
+        transition: transform 0.2s;
+
+        &:hover {
+            transform: translateY(-2px);
+        }
+    }
+
+    &--form {
+        max-width: 32rem;
+        margin: 0 auto;
+    }
+}
+
+// =============================================================================
+// FORM COMPONENTS
+// =============================================================================
+
+.form {
+    &__group {
+        margin-bottom: $spacing-lg;
+    }
+
+    &__label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: $spacing-sm;
+        color: #374151;
+    }
+
+    &__input {
+        width: 100%;
+        padding: $spacing-sm $spacing-md;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: white;
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        &--error {
+            border-color: var(--color-error);
+        }
+    }
+
+    &__select {
+        @extend .form__input;
+        background: white;
+    }
+
+    &__button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: $spacing-sm $spacing-lg;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-height: 2.5rem;
+
+        &--primary {
+            background: var(--color-primary);
+            color: white;
+
+            &:hover {
+                background: darken($color-primary, 10%);
+            }
+
+            &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+        }
+
+        &--secondary {
+            background: var(--color-secondary);
+            color: white;
+
+            &:hover {
+                background: darken($color-secondary, 10%);
+            }
+        }
+
+        &--outline {
+            background: transparent;
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+
+            &:hover {
+                background: var(--color-primary);
+                color: white;
+            }
+        }
+
+        &--wide {
+            width: 100%;
+        }
+
+        &--loading {
+            position: relative;
+            color: transparent;
+
+            &::after {
+                content: '';
+                position: absolute;
+                width: 1rem;
+                height: 1rem;
+                border: 2px solid transparent;
+                border-top: 2px solid currentColor;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+        }
+    }
+}
+
+// =============================================================================
+// TABLE COMPONENTS
+// =============================================================================
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+
+    &__header {
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    &__row {
+        border-bottom: 1px solid #f3f4f6;
+
+        &:hover {
+            background: #f9fafb;
+        }
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    &__cell {
+        padding: $spacing-md;
+        text-align: left;
+
+        &--header {
+            font-weight: 600;
+            color: #374151;
+        }
+    }
+}
+
+// =============================================================================
+// UTILITY COMPONENTS
+// =============================================================================
+
+.alert {
+    padding: $spacing-md;
+    border-radius: 0.375rem;
+    margin-bottom: $spacing-lg;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    &--info {
+        background: rgba($color-info, 0.1);
+        color: darken($color-info, 20%);
+        border: 1px solid rgba($color-info, 0.2);
+    }
+
+    &--success {
+        background: rgba($color-success, 0.1);
+        color: darken($color-success, 20%);
+        border: 1px solid rgba($color-success, 0.2);
+    }
+
+    &--error {
+        background: rgba($color-error, 0.1);
+        color: darken($color-error, 20%);
+        border: 1px solid rgba($color-error, 0.2);
+    }
+
+    &--warning {
+        background: rgba($color-warning, 0.1);
+        color: darken($color-warning, 20%);
+        border: 1px solid rgba($color-warning, 0.2);
+    }
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+
+    &--success {
+        background: rgba($color-success, 0.1);
+        color: darken($color-success, 20%);
+    }
+
+    &--warning {
+        background: rgba($color-warning, 0.1);
+        color: darken($color-warning, 20%);
+    }
+
+    &--error {
+        background: rgba($color-error, 0.1);
+        color: darken($color-error, 20%);
+    }
+
+    &--info {
+        background: rgba($color-info, 0.1);
+        color: darken($color-info, 20%);
+    }
+
+    &--neutral {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+}
+
+.loading {
+    @include flex-center;
+    min-height: 100vh;
+
+    &__spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid var(--color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+}
+
+// =============================================================================
+// ANIMATIONS
+// =============================================================================
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// =============================================================================
+// RESPONSIVE UTILITIES
+// =============================================================================
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 $spacing-md;
+}
+
+.grid {
+    display: grid;
+    gap: $spacing-lg;
+
+    &--1-col {
+        grid-template-columns: 1fr;
+    }
+
+    &--2-col {
+        grid-template-columns: 1fr;
+
+        @include respond-to(md) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    &--3-col {
+        grid-template-columns: 1fr;
+
+        @include respond-to(md) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @include respond-to(lg) {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+}
+
+.flex {
+    display: flex;
+
+    &--center {
+        @include flex-center;
+    }
+
+    &--between {
+        justify-content: space-between;
+    }
+
+    &--column {
+        flex-direction: column;
+    }
+
+    &--wrap {
+        flex-wrap: wrap;
+    }
+}
+
+// =============================================================================
+// PRINT STYLES
+// =============================================================================
+
+@media print {
+
+    .header,
+    .footer,
+    .hero__actions {
+        display: none;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
+    }
+}
