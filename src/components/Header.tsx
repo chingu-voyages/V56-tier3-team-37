@@ -18,7 +18,7 @@ export default function Header() {
       <div className="header__container">
         <div className="header__navbar">
           <div className="header__brand">
-            <Link href="/">Surgery Status</Link>
+            <Link href="/" className="header__nav-item">Surgery Status</Link>
           </div>
           
           <nav className="header__nav">
@@ -43,7 +43,7 @@ export default function Header() {
                 </ul>
               </div>
             ) : (
-              <Link href="/auth" className="form__button form__button--outline">Login</Link>
+              <Link href="/auth" className="header__nav-item">Login</Link>
             )}
           </div>
         </div>
