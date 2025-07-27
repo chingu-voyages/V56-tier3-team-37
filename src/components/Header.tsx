@@ -226,7 +226,7 @@ export default function Header() {
                 </Menu>
               </Box>
             ) : (
-              <Link href="/auth" className="form__button form__button--outline">Login</Link>
+              <Link href="/auth" className="header__nav-item">Login</Link>
             )}
           </div>
         </div>
