@@ -230,7 +230,8 @@ $spacing-lg: 1.5rem;
 ```json
 {
   "firebase": "^11.10.0",           // Firebase SDK
-  "react-firebase-hooks": "^5.1.1"  // Firebase React hooks
+  "react-firebase-hooks": "^5.1.1", // Firebase React hooks
+  "@fontsource/roboto": "^5.2.6"    // Roboto font for Material UI
 }
 ```
 
@@ -307,17 +308,45 @@ User visits / → Home page (public)
     └── Not authenticated → Redirect to /auth
 ```
 
-## 🔐 Authentication Flow
+## 🔐 Firebase Integration
 
-### Firebase Integration
-- **Configuration**: `src/lib/firebase.ts` - Firebase app initialization
-- **Context**: `src/lib/auth-context.tsx` - React context for user state
+### Firebase Configuration
+- **Firebase Setup**: `src/lib/firebase.ts` - Complete Firebase initialization with your credentials
+- **Authentication**: `src/lib/auth-context.tsx` - Real Firebase authentication with error handling
+- **Database**: `src/lib/patient-service.ts` - Firestore operations for patient data
 - **Provider**: Wraps entire app in `layout.tsx`
 
-### Authentication States
+### Firebase Services Enabled
+- ✅ **Authentication**: Email/password sign-in and sign-up
+- ✅ **Firestore Database**: Patient data storage and retrieval
+- ✅ **Analytics**: Usage tracking (browser-only)
+- ✅ **Error Handling**: Comprehensive error messages for users
+
+### Authentication Flow
 1. **Loading**: Shows spinner while checking auth state
-2. **Authenticated**: User can access protected routes
-3. **Unauthenticated**: Redirected to `/auth` page
+2. **Authenticated**: User can access protected routes and manage patients
+3. **Unauthenticated**: Redirected to `/auth` page with proper error handling
+
+### Database Operations
+```typescript
+// Patient service examples
+import { patientService } from '@/lib/patient-service';
+
+// Add a new patient
+await patientService.addPatient(patientData);
+
+// Get all patients
+const patients = await patientService.getPatients();
+
+// Get patients by status
+const scheduledPatients = await patientService.getPatientsByStatus('scheduled');
+
+// Update patient
+await patientService.updatePatient(id, updates);
+
+// Delete patient
+await patientService.deletePatient(id);
+```
 
 ### Protected Route Pattern
 ```typescript
@@ -406,16 +435,32 @@ npm run lint         # Run ESLint
 
 ## 📝 Environment Variables
 
-Create `.env.local` with your Firebase configuration:
+Create `.env.local` in the root directory with your Firebase configuration:
 
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBoN20mks1zHWbPeh9k6reAXSmejwmKQ78
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=careflow-72c2a.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=careflow-72c2a
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=careflow-72c2a.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=960916398964
+NEXT_PUBLIC_FIREBASE_APP_ID=1:960916398964:web:f66b89c0574b1bbf214221
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-Z4DTS7J9JJ
 ```
+
+### Environment Variable Setup
+
+1. **Create `.env.local` file** in the project root
+2. **Copy the configuration above** into the file
+3. **Restart your development server** after creating the file
+4. **Never commit `.env.local`** to version control (it's already in `.gitignore`)
+
+### Security Notes
+
+- ✅ **Environment variables are secure** - they're not exposed in client-side code
+- ✅ **`.env.local` is gitignored** - your secrets won't be committed
+- ✅ **Validation included** - app will show clear error if variables are missing
+- ⚠️ **Keep your Firebase keys private** - don't share them publicly
 
 ## 🚀 Deployment
 

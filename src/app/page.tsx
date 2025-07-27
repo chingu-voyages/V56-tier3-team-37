@@ -4,87 +4,73 @@ import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
-  if (loading) {
-    return (
-      <div className="loading">
-        <div className="loading__spinner"></div>
-      </div>
-    );
-  }
+  // Home page should be accessible to everyone, regardless of auth state
 
   return (
     <div>
-    {/* Hero Section */}
+      {/* Hero Section */}
       <section className="hero">
         <div className="hero__content">
-          <h1 className="hero__title">Surgery Status App</h1>
+          <h1 className="hero__title">Care Flow</h1>
+          <p className="hero__subtitle">Reducing Stress Through Real-Time Surgery Updates</p>
           <p className="hero__description">
-            A simple skeleton app demonstrating Next.js routing, Firebase authentication, 
-            and daisyUI components. Learn how to build modern web applications.
+            It's inevitable that at some point in your life you or a loved one will have to undergo some type of surgery - either as an inpatient or an outpatient. In this event you or a companion, depending on who's having the surgery, will be in a hospital waiting room while the surgery is being performed.
           </p>
+          <p className="hero__description">
+            It can be quite stressful on the person in the waiting room. But, this can be lessened by knowing how the surgery is progressing. Like many other activities there is a workflow associated with any medical procedure and knowing what state or phase the surgery is in will help whoever is waiting to know what's going on.
+          </p>
+
           <div className="hero__actions">
-            {user ? (
-              <>
-                <Link href="/patients" className="form__button form__button--primary form__button--wide">
-                  View Patients
-                </Link>
-                <Link href="/add-patient" className="form__button form__button--secondary form__button--wide">
-                  Add New Patient
-                </Link>
-              </>
-            ) : (
-              <Link href="/auth" className="form__button form__button--primary form__button--wide">
-                Get Started - Login
-              </Link>
-            )}
+            <Link href="/status" className="hero__cta hero__cta--guest">
+              <span className="hero__cta-text">Guest</span>
+              <span className="hero__cta-subtext">View patient status</span>
+            </Link>
+            <Link href="/auth" className="hero__cta hero__cta--auth">
+              <span className="hero__cta-text">Auth Login</span>
+              <span className="hero__cta-subtext">Administrator access</span>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Quick Start Guide */}
-      <section className="bg-gray-50">
+      {/* Benefits Section */}
+      <section className="benefits">
         <div className="container">
-          <div className="py-16">
-            <h2 className="text-3xl font-bold text-center mb-12">Quick Start Guide</h2>
-            <div className="max-w-2xl mx-auto">
-              <div className="space-y-4">
-                <div className="card">
-                  <div className="card__body">
-                    <h3 className="card__title">1. Authentication</h3>
-                    <p className="card__content">Start by creating an account or logging in to access the app features.</p>
-                    <div className="card__actions">
-                      <Link href="/auth" className="form__button form__button--primary">
-                        Go to Auth
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="card">
-                  <div className="card__body">
-                    <h3 className="card__title">2. View Patients</h3>
-                    <p className="card__content">After logging in, you can view the list of patients (demo data).</p>
-                    <div className="card__actions">
-                      <Link href="/patients" className="form__button form__button--primary">
-                        View Patients
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="card">
-                  <div className="card__body">
-                    <h3 className="card__title">3. Add Patient</h3>
-                    <p className="card__content">Learn how to create forms and handle user input with a simple patient form.</p>
-                    <div className="card__actions">
-                      <Link href="/add-patient" className="form__button form__button--primary">
-                        Add Patient
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+          <div className="benefits__content">
+            <h2 className="benefits__title">How Care Flow Helps</h2>
+            <div className="benefits__grid">
+              <div className="benefit-card">
+                <div className="benefit-card__icon">🏥</div>
+                <h3 className="benefit-card__title">Real-Time Updates</h3>
+                <p className="benefit-card__description">
+                  Get instant notifications about surgery progress and status changes, keeping you informed every step of the way.
+                </p>
+              </div>
+
+              <div className="benefit-card">
+                <div className="benefit-card__icon">😌</div>
+                <h3 className="benefit-card__title">Reduce Anxiety</h3>
+                <p className="benefit-card__description">
+                  Knowing what's happening during surgery helps reduce stress and anxiety for family members in the waiting room.
+                </p>
+              </div>
+
+              <div className="benefit-card">
+                <div className="benefit-card__icon">📱</div>
+                <h3 className="benefit-card__title">Easy Access</h3>
+                <p className="benefit-card__description">
+                  Simple, intuitive interface that works on any device - from your phone to hospital tablets.
+                </p>
+              </div>
+
+              <div className="benefit-card">
+                <div className="benefit-card__icon">⚡</div>
+                <h3 className="benefit-card__title">Workflow Transparency</h3>
+                <p className="benefit-card__description">
+                  Understand the medical procedure workflow and what each phase means for your loved one's surgery.
+                </p>
               </div>
             </div>
           </div>

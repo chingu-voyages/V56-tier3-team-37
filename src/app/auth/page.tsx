@@ -4,14 +4,30 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+  CircularProgress,
+  Container,
+} from '@mui/material';
+import {
+  Login as LoginIcon,
+  Home as HomeIcon,
+  Email as EmailIcon,
+  Lock as LockIcon,
+} from '@mui/icons-material';
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,90 +36,131 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password);
-      }
+      await signIn(email, password);
       router.push('/patients');
     } catch (err: any) {
-      // Firebase error handling - COMMENTED OUT FOR SKELETON
-      // In the real app, Firebase would throw authentication errors here
-      setError(err.message || 'An error occurred');
+      // Handle Firebase authentication errors
+      let errorMessage = 'An error occurred during authentication';
+
+      if (err.code) {
+        switch (err.code) {
+          case 'auth/user-not-found':
+            errorMessage = 'No account found with this email address';
+            break;
+          case 'auth/wrong-password':
+            errorMessage = 'Incorrect password';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'Please enter a valid email address';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Too many failed attempts. Please try again later';
+            break;
+          default:
+            errorMessage = err.message || errorMessage;
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
-      <div className="card card--form">
-        <div className="card__body">
-          <h2 className="card__title text-center">
-            {isLogin ? 'Login' : 'Sign Up'}
-          </h2>       
-              
-          {error && (
-            <div className="alert alert--error">
-              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{error}</span>
-            </div>
-          )}
+    <Box className="auth-page">
+      <Container maxWidth="sm">
+        <Box className="auth-page__container">
+          {/* Main Auth Card */}
+          <Card className="auth-page__card" elevation={8}>
+            <CardContent className="auth-page__content">
+              {/* Header */}
+              <Box className="auth-page__header">
+                <Box className="auth-page__icon-container">
+                  <LoginIcon className="auth-page__icon" />
+                </Box>
+                <Typography variant="h4" component="h1" className="auth-page__title">
+                  Welcome Back
+                </Typography>
+                <Typography variant="body1" className="auth-page__subtitle">
+                  Sign in to access your Care Flow dashboard
+                </Typography>
+              </Box>
 
-          <form onSubmit={handleSubmit} className="form">
-            <div className="form__group">
-              <label className="form__label">Email</label>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="form__input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
+              {/* Error Alert */}
+              {error && (
+                <Alert severity="error" className="auth-page__alert">
+                  {error}
+                </Alert>
+              )}
 
-            <div className="form__group">
-              <label className="form__label">Password</label>
-              <input
-                type="password"
-                placeholder="Enter your password"
-                className="form__input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+              {/* Form */}
+              <Box component="form" onSubmit={handleSubmit} className="auth-page__form">
+                <TextField
+                  fullWidth
+                  label="Email Address"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="auth-page__input"
+                  InputProps={{
+                    startAdornment: <EmailIcon className="auth-page__input-icon" />,
+                  }}
+                />
 
-            <div className="form__group">
-              <button
-                type="submit"
-                className={`form__button form__button--primary form__button--wide ${loading ? 'form__button--loading' : ''}`}
-                disabled={loading}
-              >
-                {loading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
-              </button>
-            </div>
-          </form>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="auth-page__input"
+                  InputProps={{
+                    startAdornment: <LockIcon className="auth-page__input-icon" />,
+                  }}
+                />
 
-          <div className="text-center mt-6">
-            <button
-              className="form__button form__button--outline form__button--wide"
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              {isLogin ? 'Create new account' : 'Already have an account?'}
-            </button>
-          </div>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  disabled={loading}
+                  className="auth-page__submit-button"
+                  startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
+                >
+                  {loading ? 'Processing...' : 'Sign In'}
+                </Button>
+              </Box>
 
-          <div className="text-center mt-4">
-            <Link href="/" className="form__button form__button--outline">
-              Back to Home
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+              {/* Back to Home Button */}
+              <Box className="auth-page__actions">
+                <Button
+                  variant="text"
+                  fullWidth
+                  component={Link}
+                  href="/"
+                  className="auth-page__home-button"
+                  startIcon={<HomeIcon />}
+                >
+                  Back to Home
+                </Button>
+              </Box>
+
+              {/* Footer */}
+              <Box className="auth-page__footer">
+                <Typography variant="caption" color="textSecondary" align="center">
+                  By continuing, you agree to our Terms of Service and Privacy Policy
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+      </Container>
+    </Box>
   );
 } 

@@ -3,10 +3,10 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer__container">
         <p className="footer__text">
-          © 2024 Surgery Status App. Built with Next.js and daisyUI.
+          © 2024 Care Flow. Built with Next.js, Firebase, and Material UI.
         </p>
         <p className="footer__subtext">
-          A simple skeleton app for learning routing and authentication.
+          Reducing stress through real-time surgery updates and workflow transparency.
         </p>
       </div>
     </footer>

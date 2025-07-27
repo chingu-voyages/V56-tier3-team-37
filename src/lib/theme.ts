@@ -164,7 +164,23 @@ const themeOptions: ThemeOptions = {
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
+            borderRadius: 12,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            transition: 'all 0.3s ease',
+            minHeight: 56,
+            '&:hover': {
+              backgroundColor: 'white',
+              transform: 'translateY(-1px)',
+            },
+            '&.Mui-focused': {
+              backgroundColor: 'white',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 4px 15px rgba(7, 190, 184, 0.2)',
+            },
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'rgba(7, 190, 184, 0.3)',
+              borderWidth: '1.5px',
+            },
             '&:hover .MuiOutlinedInput-notchedOutline': {
               borderColor: tealPalette.mediumTeal,
             },
@@ -172,6 +188,28 @@ const themeOptions: ThemeOptions = {
               borderColor: tealPalette.teal,
               borderWidth: '2px',
             },
+            '& .MuiInputBase-input': {
+              padding: '16px 14px',
+              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+              fontSize: '1rem',
+            },
+          },
+          '& .MuiInputLabel-root': {
+            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+            fontWeight: 500,
+            color: 'rgba(0, 0, 0, 0.6)',
+            fontSize: '1rem',
+            '&.Mui-focused': {
+              color: tealPalette.teal,
+              fontWeight: 600,
+            },
+            '&.MuiInputLabel-shrink': {
+              color: tealPalette.teal,
+              fontWeight: 600,
+            },
+          },
+          '& .MuiInputAdornment-root': {
+            marginRight: 8,
           },
         },
       },
