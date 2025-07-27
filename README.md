@@ -50,7 +50,45 @@ V56-tier3-team-37/
         └── auth-context.tsx   # Authentication context (mock)
 ```
 
-## 🎨 BEM Methodology & SCSS Implementation
+## 🎨 Material UI Theme & BEM Methodology
+
+### Material UI Theme Configuration
+
+This project includes a comprehensive Material UI theme using a custom teal color palette:
+
+#### **Teal Color Palette**
+```typescript
+const tealPalette = {
+  teal: '#07BEB8',           // Primary teal
+  mediumTeal: '#3DCCC7',     // Medium teal
+  lightAqua: '#68d8D6',      // Light aqua
+  lightBlue: '#9CEAEF',      // Light blue
+  veryLightAqua: '#C4FFF9',  // Very light aqua
+  black: '#000000',          // Black
+};
+```
+
+#### **Theme Features**
+- **Custom Color Palette**: Teal-based theme with complementary colors
+- **Typography**: Roboto font integration with proper font weights
+- **Component Customization**: Buttons, cards, forms, and more styled with teal theme
+- **Responsive Design**: Mobile-first approach with proper breakpoints
+- **Accessibility**: High contrast ratios and proper color usage
+
+#### **Theme Demo**
+Visit `/theme-demo` to see all Material UI components styled with the custom theme.
+
+#### **Using Material UI Components**
+```tsx
+import { Button, Card, Typography } from '@mui/material';
+
+// Components automatically use the teal theme
+<Button variant="contained">Primary Button</Button>
+<Card>Styled Card</Card>
+<Typography variant="h4">Styled Typography</Typography>
+```
+
+### BEM Methodology & SCSS Implementation
 
 This project demonstrates **BEM (Block Element Modifier)** methodology combined with **SCSS preprocessing** for maintainable and scalable CSS architecture.
 
@@ -180,7 +218,11 @@ $spacing-lg: 1.5rem;
 {
   "tailwindcss": "^4",        // Utility-first CSS framework
   "daisyui": "latest",        // Component library for Tailwind
-  "sass": "latest"            // SCSS preprocessor
+  "sass": "latest",           // SCSS preprocessor
+  "@mui/material": "^7.2.0",  // Material UI component library
+  "@mui/icons-material": "^7.2.0", // Material UI icons
+  "@emotion/react": "^11.14.0", // Emotion for Material UI styling
+  "@emotion/styled": "^11.14.1"  // Styled components for Material UI
 }
 ```
 
@@ -411,14 +453,4 @@ This project was built as part of Chingu Voyage, a collaborative learning experi
 - Create a scalable and maintainable codebase
 - Provide learning resources for fellow developers
 
-## 🤝 Contributing
 
-This is a learning project for Chingu Voyage. Feel free to:
-- Fork and extend for your own projects
-- Add new features and components
-- Improve documentation
-- Share your improvements
-
-## 📄 License
-
-MIT License - feel free to use this skeleton for your own projects!

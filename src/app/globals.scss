@@ -11,17 +11,23 @@
 // VARIABLES
 // =============================================================================
 
-// Colors
-$color-primary: #3b82f6;
-$color-secondary: #64748b;
+// Colors - Updated to match Material UI teal theme
+$color-primary: #07BEB8; // Teal from palette
+$color-secondary: #9CEAEF; // Light blue from palette
 $color-success: #10b981;
 $color-warning: #f59e0b;
 $color-error: #ef4444;
-$color-info: #06b6d4;
+$color-info: #68d8D6; // Light aqua from palette
+
+// Additional teal palette colors
+$color-teal-medium: #3DCCC7;
+$color-teal-light: #68d8D6;
+$color-teal-very-light: #C4FFF9;
 
 // Typography
-$font-family-base: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-$font-family-mono: 'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+$font-family-base: var(--font-geist-sans), 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-family-mono: var(--font-geist-mono), 'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+$font-family-roboto: var(--font-roboto), 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
 // Spacing
 $spacing-xs: 0.25rem;
@@ -626,6 +632,34 @@ body {
     to {
         transform: rotate(360deg);
     }
+}
+
+// =============================================================================
+// FONT UTILITIES
+// =============================================================================
+
+.font-roboto {
+    font-family: $font-family-roboto;
+}
+
+.font-roboto-light {
+    font-family: $font-family-roboto;
+    font-weight: 300;
+}
+
+.font-roboto-regular {
+    font-family: $font-family-roboto;
+    font-weight: 400;
+}
+
+.font-roboto-medium {
+    font-family: $font-family-roboto;
+    font-weight: 500;
+}
+
+.font-roboto-bold {
+    font-family: $font-family-roboto;
+    font-weight: 700;
 }
 
 // =============================================================================
