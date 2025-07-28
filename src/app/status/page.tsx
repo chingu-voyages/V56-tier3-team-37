@@ -10,8 +10,7 @@ import {
     Chip,
     CircularProgress,
     Alert,
-    Container,
-    Grid
+    Container
 } from '@mui/material';
 import {
     Person as PersonIcon,

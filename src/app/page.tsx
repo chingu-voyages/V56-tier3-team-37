@@ -1,10 +1,9 @@
 'use client';
 
-import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 
 export default function Home() {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Removed unused variable
 
   // Home page should be accessible to everyone, regardless of auth state
 
