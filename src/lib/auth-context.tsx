@@ -1,21 +1,21 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-// Firebase imports - COMMENTED OUT FOR SKELETON
-// import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-// import { auth } from './firebase';
-
-// Mock User type for skeleton
-interface User {
-  email: string;
-  uid: string;
-}
+import {
+  User,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth';
+import { auth } from './firebase';
+import { UserRole, getUserRole, getUserInfo, UserWithRole } from './user-roles';
 
 interface AuthContextType {
   user: User | null;
+  userRole: UserRole;
+  userInfo: UserWithRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -23,65 +23,57 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>('guest');
+  const [userInfo, setUserInfo] = useState<UserWithRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Firebase auth state listener - COMMENTED OUT FOR SKELETON
-    /*
+    // Firebase auth state listener
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+
+      if (user && user.email) {
+        const role = getUserRole(user.email);
+        const info = getUserInfo(user.email);
+        setUserRole(role);
+        setUserInfo(info);
+      } else {
+        setUserRole('guest');
+        setUserInfo(null);
+      }
+
       setLoading(false);
     });
 
     return unsubscribe;
-    */
-    
-    // Mock authentication for skeleton app
-    setTimeout(() => {
-      setLoading(false);
-      // Uncomment the line below to simulate a logged-in user
-      // setUser({ email: 'demo@example.com', uid: 'demo-uid' });
-    }, 1000);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    // Firebase sign in - COMMENTED OUT FOR SKELETON
-    /*
-    await signInWithEmailAndPassword(auth, email, password);
-    */
-    
-    // Mock sign in for skeleton app
-    console.log('Mock sign in:', email, password);
-    setUser({ email, uid: 'mock-uid' });
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      throw error;
+    }
   };
 
-  const signUp = async (email: string, password: string) => {
-    // Firebase sign up - COMMENTED OUT FOR SKELETON
-    /*
-    await createUserWithEmailAndPassword(auth, email, password);
-    */
-    
-    // Mock sign up for skeleton app
-    console.log('Mock sign up:', email, password);
-    setUser({ email, uid: 'mock-uid' });
-  };
+
 
   const logout = async () => {
-    // Firebase sign out - COMMENTED OUT FOR SKELETON
-    /*
-    await signOut(auth);
-    */
-    
-    // Mock logout for skeleton app
-    console.log('Mock logout');
-    setUser(null);
+    try {
+      await signOut(auth);
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      throw error;
+    }
   };
 
   const value = {
     user,
+    userRole,
+    userInfo,
     loading,
     signIn,
-    signUp,
     logout,
   };
 
