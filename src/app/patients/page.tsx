@@ -308,6 +308,15 @@ export default function PatientsPage() {
                     }}>
                       Name
                     </TableCell>
+                     <TableCell sx={{
+                      fontWeight: 600, 
+                      color: '#1F2937', 
+                      fontFamily: 'var(--font-roboto), Roboto, sans-serif', 
+                      fontSize: '0.95rem', 
+                      borderBottom: '2px solid rgba(7, 190, 184, 0.2)' 
+                      }}>
+                        Patient ID
+                    </TableCell>
                     <TableCell sx={{
                       fontWeight: 600,
                       color: '#1F2937',
@@ -385,6 +394,12 @@ export default function PatientsPage() {
                         <Typography variant="body2" fontWeight="600" color="#1F2937">
                           {patient.name}
                         </Typography>
+                      </TableCell>
+                      <TableCell sx={{
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                        color: '#6B7280'
+                      }}>
+                        {patient.id}
                       </TableCell>
                       <TableCell sx={{
                         fontFamily: 'var(--font-roboto), Roboto, sans-serif',
