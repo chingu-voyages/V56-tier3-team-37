@@ -15,11 +15,11 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="text-blue-600 hover:underline"
           >
-            View Project on GitHub
+            Github Repository
           </a>
         </p>
         <div className="text-sm">
-          <p className="font-semibold mb-1">Team Members:</p>
+          <p className="font-semibold mb-1">Team Members</p>
           <div className="space-y-1">
             <div>
               Cristian Torres –{" "}
