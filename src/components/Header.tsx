@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
+import { UserRole } from '@/lib/user-roles';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -60,15 +61,15 @@ export default function Header() {
 
           <nav className="header__nav">
             <Link href="/" className="header__nav-item">Home</Link>
+            <Link href="/status" className="header__nav-item">Patient Status</Link>
             {user && (
               <>
-                {userRole === 'admin' && (
+                {userRole === UserRole.ADMIN && (
                   <Link href="/add-patient" className="header__nav-item">Patient Information</Link>
                 )}
-                {(userRole === 'admin' || userRole === 'surgical-team') && (
+                {(userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM) && (
                   <Link href="/patients" className="header__nav-item">Patient Status Update</Link>
                 )}
-                <Link href="/patients" className="header__nav-item">Patient Status</Link>
               </>
             )}
           </nav>
@@ -173,17 +174,17 @@ export default function Header() {
                       </Box>
                     </Box>
                     <Chip
-                      label={userRole === 'admin' ? 'Administrator' : userRole === 'surgical-team' ? 'Surgical Team' : 'Guest'}
+                      label={userRole === UserRole.ADMIN ? 'Administrator' : userRole === UserRole.SURGICAL_TEAM ? 'Surgical Team' : 'Guest'}
                       size="small"
                       sx={{
-                        bgcolor: userRole === 'admin'
+                        bgcolor: userRole === UserRole.ADMIN
                           ? 'rgba(7, 190, 184, 0.1)'
-                          : userRole === 'surgical-team'
+                          : userRole === UserRole.SURGICAL_TEAM
                             ? 'rgba(245, 158, 11, 0.1)'
                             : 'rgba(107, 114, 128, 0.1)',
-                        color: userRole === 'admin'
+                        color: userRole === UserRole.ADMIN
                           ? '#07BEB8'
-                          : userRole === 'surgical-team'
+                          : userRole === UserRole.SURGICAL_TEAM
                             ? '#F59E0B'
                             : '#6B7280',
                         fontWeight: 600,

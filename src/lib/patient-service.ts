@@ -14,26 +14,43 @@ import { db } from './firebase';
 
 export interface Patient {
   id?: string;
-  name: string;
+  // New fields
+  firstName?: string;
+  lastName?: string;
+  dob?: string;
+  address?: string;
+  healthCareInsurance?: string;
+  patientNumber?: string; // Unique 6-character patient number
+  patientId?: string; // Legacy field for existing patients
+  // Existing fields (for backward compatibility)
+  name?: string;
   email: string;
   phone: string;
-  dateOfBirth: string;
-  surgeryType: string;
-  surgeryDate: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  dateOfBirth?: string;
+  surgeryType?: string;
+  surgeryDate?: string;
+  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   notes?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 export interface CreatePatientData {
-  name: string;
+  // New fields
+  firstName?: string;
+  lastName?: string;   
+  dob?: string;
+  address?: string;
+  healthCareInsurance?: string;
+  patientNumber?: string; // Unique 6-character patient number
+  patientId?: string; // Legacy field for existing patients
+  name?: string;
   email: string;
   phone: string;
-  dateOfBirth: string;
-  surgeryType: string;
-  surgeryDate: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  dateOfBirth?: string;
+  surgeryType?: string;
+  surgeryDate?: string;
+  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   notes?: string;
 }
 
@@ -138,6 +155,43 @@ class PatientService {
       console.error('Error getting patient by ID:', error);
       throw new Error('Failed to fetch patient');
     }
+  }
+
+  // Check if patient number exists
+  async checkPatientNumberExists(patientNumber: string): Promise<boolean> {
+    try {
+      const q = query(
+        collection(db, this.collectionName),
+        where('patientNumber', '==', patientNumber)
+      );
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('Error checking patient number:', error);
+      throw new Error('Failed to check patient number');
+    }
+  }
+
+  // Generate a unique patient number
+  private async generateUniquePatientNumber(): Promise<string> {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let patientNumber = '';
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    do {
+      patientNumber = '';
+      for (let i = 0; i < 6; i++) {
+        patientNumber += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      attempts++;
+    } while (await this.checkPatientNumberExists(patientNumber) && attempts < maxAttempts);
+
+    if (attempts >= maxAttempts) {
+      throw new Error('Unable to generate unique patient number');
+    }
+
+    return patientNumber;
   }
 }
 

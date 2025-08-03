@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
 import { patientService, Patient, CreatePatientData } from '@/lib/patient-service';
+import { UserRole } from '@/lib/user-roles';
 import {
   Box,
   Typography,
@@ -33,14 +34,14 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
-import { 
-  Add as AddIcon, 
-  Refresh as RefreshIcon, 
-  Edit as EditIcon, 
-  Close as CloseIcon, 
+import {
+  Add as AddIcon,
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+  Close as CloseIcon,
   Delete as DeleteIcon,
-  Search as SearchIcon, 
-  FilterList as FilterIcon 
+  Search as SearchIcon,
+  FilterList as FilterIcon
 } from '@mui/icons-material';
 
 export default function PatientsPage() {
@@ -52,28 +53,28 @@ export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [surgeryTypeFilter, setSurgeryTypeFilter] = useState<string>('all');
-  
+
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState(false);
-  
+
   const [editFormData, setEditFormData] = useState<CreatePatientData>({
-    name: '',
+    firstName: '',
+    lastName: '',
+    dob: '',
+    address: '',
+    healthCareInsurance: '',
     email: '',
     phone: '',
-    dateOfBirth: '',
-    surgeryType: '',
-    surgeryDate: '',
-    status: 'scheduled',
-    notes: ''
+    patientNumber: '',
   });
 
   useEffect(() => {
@@ -100,19 +101,21 @@ export default function PatientsPage() {
 
   // Add this filtered patients computation
   const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.phone.includes(searchTerm) ||
-                         patient.surgeryType.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const fullName = patient.name || `${patient.firstName || ''} ${patient.lastName || ''}`.trim();
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.phone.includes(searchTerm) ||
+      (patient.patientNumber && patient.patientNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (patient.surgeryType && patient.surgeryType.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
     const matchesSurgeryType = surgeryTypeFilter === 'all' || patient.surgeryType === surgeryTypeFilter;
-    
+
     return matchesSearch && matchesStatus && matchesSurgeryType;
   });
 
   // Get unique surgery types for filter dropdown
-  const uniqueSurgeryTypes = [...new Set(patients.map(p => p.surgeryType))];
+  const uniqueSurgeryTypes = [...new Set(patients.map(p => p.surgeryType).filter(Boolean))];
 
   const fetchPatients = async () => {
     try {
@@ -130,14 +133,14 @@ export default function PatientsPage() {
   const handleEditPatient = (patient: Patient) => {
     setEditingPatient(patient);
     setEditFormData({
-      name: patient.name || '',
+      firstName: patient.firstName || '',
+      lastName: patient.lastName || '',
+      dob: patient.dob || patient.dateOfBirth || '',
+      address: patient.address || '',
+      healthCareInsurance: patient.healthCareInsurance || '',
       email: patient.email || '',
       phone: patient.phone || '',
-      dateOfBirth: patient.dateOfBirth || '',
-      surgeryType: patient.surgeryType || '',
-      surgeryDate: patient.surgeryDate || '',
-      status: patient.status || 'scheduled',
-      notes: patient.notes || ''
+      patientNumber: patient.patientNumber || '',
     });
     setEditError('');
     setEditSuccess(false);
@@ -169,18 +172,26 @@ export default function PatientsPage() {
 
     try {
       // Basic validation
-      if (!editFormData.name.trim()) throw new Error('Name is required');
+      if (!editFormData.firstName.trim()) throw new Error('First Name is required');
+      if (!editFormData.lastName.trim()) throw new Error('Last Name is required');
       if (!editFormData.email.trim()) throw new Error('Email is required');
       if (!editFormData.phone.trim()) throw new Error('Phone is required');
-      if (!editFormData.surgeryType.trim()) throw new Error('Surgery type is required');
-      if (!editFormData.surgeryDate) throw new Error('Surgery date is required');
+      if (!editFormData.dob.trim()) throw new Error('Date of Birth is required');
+      if (!editFormData.address.trim()) throw new Error('Address is required');
+      if (!editFormData.healthCareInsurance.trim()) throw new Error('Health Care Insurance is required');
 
-      await patientService.updatePatient(editingPatient.id, editFormData);
+      await patientService.updatePatient(editingPatient.id, {
+        ...editFormData,
+        // Generate a full name from firstName and lastName for backward compatibility
+        name: `${editFormData.firstName} ${editFormData.lastName}`.trim(),
+        // Map dob to dateOfBirth for backward compatibility
+        dateOfBirth: editFormData.dob,
+      });
       setEditSuccess(true);
-      
+
       // Refresh the patients list
       await fetchPatients();
-      
+
       // Close modal after short delay
       setTimeout(() => {
         handleCloseEditModal();
@@ -225,7 +236,7 @@ export default function PatientsPage() {
   }
 
   return (
-    <RoleGuard requiredRole="surgical-team">
+    <RoleGuard requiredRole={UserRole.SURGICAL_TEAM}>
       <Box sx={{
         p: 4,
         background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
@@ -455,7 +466,7 @@ export default function PatientsPage() {
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1F2937' }}>
                 Search & Filter Patients
               </Typography>
-              
+
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <TextField
                   placeholder="Search by name, email, phone, or surgery type..."
@@ -467,7 +478,7 @@ export default function PatientsPage() {
                   sx={{ flex: '1 1 300px', minWidth: 0 }}
                   size="small"
                 />
-                
+
                 <FormControl sx={{ minWidth: 150 }} size="small">
                   <InputLabel>Status</InputLabel>
                   <Select
@@ -482,7 +493,7 @@ export default function PatientsPage() {
                     <MenuItem value="cancelled">Cancelled</MenuItem>
                   </Select>
                 </FormControl>
-                
+
                 <FormControl sx={{ minWidth: 180 }} size="small">
                   <InputLabel>Surgery Type</InputLabel>
                   <Select
@@ -496,7 +507,7 @@ export default function PatientsPage() {
                     ))}
                   </Select>
                 </FormControl>
-                
+
                 <Button
                   variant="outlined"
                   onClick={() => {
@@ -509,7 +520,7 @@ export default function PatientsPage() {
                   Clear Filters
                 </Button>
               </Box>
-              
+
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                 Showing {filteredPatients.length} of {patients.length} patients
               </Typography>
@@ -535,14 +546,14 @@ export default function PatientsPage() {
                       }}>
                         Name
                       </TableCell>
-                       <TableCell sx={{
-                        fontWeight: 600, 
-                        color: '#1F2937', 
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif', 
-                        fontSize: '0.95rem', 
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)' 
-                        }}>
-                          Patient ID
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        color: '#1F2937',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                        fontSize: '0.95rem',
+                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                      }}>
+                        Patient Number
                       </TableCell>
                       <TableCell sx={{
                         fontWeight: 600,
@@ -634,9 +645,10 @@ export default function PatientsPage() {
                         </TableCell>
                         <TableCell sx={{
                           fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                          color: '#6B7280'
+                          color: '#6B7280',
+                          fontWeight: 500
                         }}>
-                          {patient.id}
+                          {patient.patientNumber || 'N/A'}
                         </TableCell>
                         <TableCell sx={{
                           fontFamily: 'var(--font-roboto), Roboto, sans-serif',
@@ -654,18 +666,18 @@ export default function PatientsPage() {
                           fontFamily: 'var(--font-roboto), Roboto, sans-serif',
                           fontWeight: 500
                         }}>
-                          {patient.surgeryType}
+                          {patient.surgeryType || 'N/A'}
                         </TableCell>
                         <TableCell sx={{
                           fontFamily: 'var(--font-roboto), Roboto, sans-serif',
                           color: '#6B7280'
                         }}>
-                          {formatDate(patient.surgeryDate)}
+                          {patient.surgeryDate ? formatDate(patient.surgeryDate) : 'N/A'}
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={patient.status.replace('-', ' ')}
-                            color={getStatusColor(patient.status)}
+                            label={(patient.status || 'scheduled').replace('-', ' ')}
+                            color={getStatusColor(patient.status || 'scheduled')}
                             size="small"
                             sx={{
                               textTransform: 'capitalize',

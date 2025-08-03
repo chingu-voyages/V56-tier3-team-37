@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context';
 import { patientService, Patient } from '@/lib/patient-service';
+import { UserRole } from '@/lib/user-roles';
 import {
     Box,
     Typography,
@@ -21,11 +23,13 @@ import {
 } from '@mui/icons-material';
 
 export default function StatusPage() {
+    const { user, userRole, loading: authLoading } = useAuth();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
+        // Always fetch patients regardless of authentication status
         fetchPatients();
     }, []);
 
@@ -76,7 +80,14 @@ export default function StatusPage() {
         return new Date(dateString).toLocaleDateString();
     };
 
-    if (loading) {
+    // Check user role using the enum
+    const isAuthenticated = userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM;
+    const isGuest = userRole === UserRole.GUEST;
+
+    // Debug logging
+    console.log('Auth Debug:', { user: user?.email, userRole, isAuthenticated, isGuest });
+
+    if (loading || authLoading) {
         return (
             <Box sx={{
                 display: 'flex',
@@ -143,6 +154,20 @@ export default function StatusPage() {
                     >
                         Real-time updates on surgery progress and patient status
                     </Typography>
+                    {isGuest && (
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                                fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                fontSize: '0.9rem',
+                                mt: 1,
+                                fontStyle: 'italic'
+                            }}
+                        >
+                            Public view - showing limited information for privacy
+                        </Typography>
+                    )}
                 </Box>
 
                 {error && (
@@ -214,7 +239,7 @@ export default function StatusPage() {
                                 }}>
                                     <CardContent sx={{ p: 3 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                            {getStatusIcon(patient.status)}
+                                            {getStatusIcon(patient.status || 'scheduled')}
                                             <Typography
                                                 variant="h6"
                                                 component="h2"
@@ -225,25 +250,15 @@ export default function StatusPage() {
                                                     fontFamily: 'var(--font-roboto), Roboto, sans-serif'
                                                 }}
                                             >
-                                                {patient.name}
+                                                {isGuest ? `Patient ${patient.patientNumber || patient.patientId || 'Loading...'}` : patient.name}
                                             </Typography>
                                         </Box>
 
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{
-                                                mb: 2,
-                                                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
-                                            }}
-                                        >
-                                            {patient.surgeryType}
-                                        </Typography>
-
+                                        {/* Only show status for guests - no other information */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             <Chip
-                                                label={patient.status.replace('-', ' ')}
-                                                color={getStatusColor(patient.status)}
+                                                label={(patient.status || 'scheduled').replace('-', ' ')}
+                                                color={getStatusColor(patient.status || 'scheduled')}
                                                 size="small"
                                                 sx={{
                                                     textTransform: 'capitalize',
@@ -270,16 +285,34 @@ export default function StatusPage() {
                                             />
                                         </Box>
 
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{
-                                                fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                                                fontSize: '0.875rem'
-                                            }}
-                                        >
-                                            Surgery Date: {formatDate(patient.surgeryDate)}
-                                        </Typography>
+                                        {/* Only show additional info for authenticated users */}
+                                        {isAuthenticated && (
+                                            <>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
+                                                    sx={{
+                                                        mb: 2,
+                                                        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                                                    }}
+                                                >
+                                                    {patient.surgeryType}
+                                                </Typography>
+
+                                                {patient.surgeryDate && (
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                        sx={{
+                                                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                                            fontSize: '0.875rem'
+                                                        }}
+                                                    >
+                                                        Surgery Date: {formatDate(patient.surgeryDate)}
+                                                    </Typography>
+                                                )}
+                                            </>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </Box>

@@ -1,4 +1,8 @@
-export type UserRole = 'guest' | 'admin' | 'surgical-team';
+export enum UserRole {
+  GUEST = 'guest',
+  ADMIN = 'admin',
+  SURGICAL_TEAM = 'surgical-team'
+}
 
 export interface UserWithRole {
   email: string;
@@ -10,19 +14,19 @@ export interface UserWithRole {
 export const AUTHENTICATED_USERS: UserWithRole[] = [
   {
     email: 'admin@mail.com',
-    role: 'admin',
+    role: UserRole.ADMIN,
     name: 'Administrator'
   },
   {
     email: 'team1@mail.com',
-    role: 'surgical-team',
+    role: UserRole.SURGICAL_TEAM,
     name: 'Surgical Team Member'
   },  
 ];
 
 export function getUserRole(email: string): UserRole {
   const user = AUTHENTICATED_USERS.find(u => u.email === email);
-  return user ? user.role : 'guest';
+  return user ? user.role : UserRole.GUEST;
 }
 
 export function getUserInfo(email: string): UserWithRole | null {
@@ -31,20 +35,20 @@ export function getUserInfo(email: string): UserWithRole | null {
 
 export function hasPermission(userRole: UserRole, requiredRole: UserRole): boolean {
   const roleHierarchy: Record<UserRole, number> = {
-    'guest': 0,
-    'surgical-team': 1,
-    'admin': 2
+    [UserRole.GUEST]: 0,
+    [UserRole.SURGICAL_TEAM]: 1,
+    [UserRole.ADMIN]: 2
   };
   
   return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
 }
 
 export function canAccessPatientInformation(userRole: UserRole): boolean {
-  return userRole === 'admin';
+  return userRole === UserRole.ADMIN;
 }
 
 export function canAccessPatientStatusUpdate(userRole: UserRole): boolean {
-  return userRole === 'admin' || userRole === 'surgical-team';
+  return userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM;
 }
 
 export function canAccessPatientStatus(userRole: UserRole): boolean {
@@ -52,9 +56,9 @@ export function canAccessPatientStatus(userRole: UserRole): boolean {
 }
 
 export function canAddPatients(userRole: UserRole): boolean {
-  return userRole === 'admin' || userRole === 'surgical-team';
+  return userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM;
 }
 
 export function canUpdatePatients(userRole: UserRole): boolean {
-  return userRole === 'admin' || userRole === 'surgical-team';
+  return userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM;
 } 

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { patientService, CreatePatientData, Patient } from '@/lib/patient-service';
+import { UserRole } from '@/lib/user-roles';
 import {
   Box,
   Typography,
@@ -34,7 +35,7 @@ export default async function EditPatientPage({ params }: { params: { id: string
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const patientId = params.id as string;
-  
+
   const [loading, setLoading] = useState(false);
   const [fetchingPatient, setFetchingPatient] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -67,18 +68,18 @@ export default async function EditPatientPage({ params }: { params: { id: string
     try {
       setFetchingPatient(true);
       setError('');
-      
+
       // Get all patients and find the one with matching ID
       const patients = await patientService.getPatients();
       const foundPatient = patients.find(p => p.id === patientId);
-      
+
       if (!foundPatient) {
         setError('Patient not found');
         return;
       }
 
       setPatient(foundPatient);
-      
+
       // Populate form with existing data
       setFormData({
         name: foundPatient.name || '',
@@ -150,7 +151,7 @@ export default async function EditPatientPage({ params }: { params: { id: string
 
   if (error && !patient) {
     return (
-      <RoleGuard requiredRole="surgical-team">
+      <RoleGuard requiredRole={UserRole.SURGICAL_TEAM}>
         <Box sx={{ p: 3 }}>
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
@@ -168,7 +169,7 @@ export default async function EditPatientPage({ params }: { params: { id: string
   }
 
   return (
-    <RoleGuard requiredRole="surgical-team">
+    <RoleGuard requiredRole={UserRole.SURGICAL_TEAM}>
       <Box sx={{ p: 3 }}>
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link href="/patients" style={{ textDecoration: 'none', color: 'inherit' }}>

@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<UserRole>('guest');
+  const [userRole, setUserRole] = useState<UserRole>(UserRole.GUEST);
   const [userInfo, setUserInfo] = useState<UserWithRole | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,10 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (user && user.email) {
         const role = getUserRole(user.email);
         const info = getUserInfo(user.email);
+        console.log('Auth State Changed - User logged in:', { email: user.email, role, info });
         setUserRole(role);
         setUserInfo(info);
       } else {
-        setUserRole('guest');
+        console.log('Auth State Changed - No user, setting to GUEST');
+        setUserRole(UserRole.GUEST);
         setUserInfo(null);
       }
 
