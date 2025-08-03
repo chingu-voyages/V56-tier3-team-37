@@ -270,44 +270,121 @@ body {
 
 // Hero Section
 .hero {
-    min-height: 60vh;
-    background: #f3f4f6;
+    min-height: 80vh;
+    background: linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 50%, #E0F7FA 100%);
+    position: relative;
     @include flex-center;
     padding: $spacing-2xl 0;
+    overflow: hidden;
+
+    &__background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(7,190,184,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(7,190,184,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(7,190,184,0.05)"/><circle cx="10" cy="60" r="0.5" fill="rgba(7,190,184,0.05)"/><circle cx="90" cy="40" r="0.5" fill="rgba(7,190,184,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    }
+
+    &__background-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.1);
+    }
 
     &__content {
         text-align: center;
-        max-width: 32rem;
+        max-width: 48rem;
         padding: 0 $spacing-md;
+        position: relative;
+        z-index: 2;
+    }
+
+    &__badge {
+        display: inline-block;
+        background: rgba(7, 190, 184, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(7, 190, 184, 0.2);
+        border-radius: 50px;
+        padding: $spacing-sm $spacing-lg;
+        margin-bottom: $spacing-xl;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: $color-primary;
+        letter-spacing: 0.5px;
     }
 
     &__title {
-        font-size: 3rem;
-        font-weight: bold;
+        font-size: 4rem;
+        font-weight: 800;
         margin-bottom: $spacing-lg;
-        color: #1f2937;
+        color: $color-text;
+        text-shadow: 0 2px 10px rgba(7, 190, 184, 0.2);
+        letter-spacing: -0.02em;
 
         @include respond-to(sm) {
-            font-size: 3.75rem;
+            font-size: 5rem;
         }
+
+        @include respond-to(lg) {
+            font-size: 6rem;
+        }
+    }
+
+    &__subtitle {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-bottom: $spacing-2xl;
+        color: $color-text-secondary;
+        line-height: 1.6;
+        max-width: 36rem;
+        margin-left: auto;
+        margin-right: auto;
+
+        .Typewriter__wrapper {
+            font-family: $font-family-roboto;
+        }
+
+        .Typewriter__cursor {
+            color: $color-primary;
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+    }
+
+    &__typewriter-cursor {
+        color: $color-primary;
+        font-weight: bold;
+        animation: blink 1s infinite;
+    }
+
+    &__description-container {
+        margin-bottom: $spacing-2xl;
     }
 
     &__description {
         font-size: 1.125rem;
         line-height: 1.75;
-        margin-bottom: $spacing-xl;
-        color: #6b7280;
+        margin-bottom: $spacing-lg;
+        color: $color-text-secondary;
+        max-width: 40rem;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     &__actions {
         display: flex;
         flex-direction: column;
-        gap: $spacing-md;
+        gap: $spacing-lg;
         align-items: center;
 
         @include respond-to(sm) {
             flex-direction: row;
             justify-content: center;
+            gap: $spacing-xl;
         }
     }
 }
@@ -907,16 +984,16 @@ body {
 
     &__cta {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        padding: $spacing-xl $spacing-xxl;
-        border-radius: 16px;
+        padding: $spacing-xl $spacing-2xl;
+        border-radius: 20px;
         text-decoration: none;
         transition: all 0.3s ease;
-        min-width: 220px;
+        min-width: 280px;
         min-height: 80px;
         position: relative;
         overflow: hidden;
+        backdrop-filter: blur(10px);
 
         &::before {
             content: '';
@@ -939,74 +1016,54 @@ body {
         }
 
         &--guest {
-            background: linear-gradient(135deg, #07BEB8 0%, #3DCCC7 50%, #68D8D6 100%);
+            background: linear-gradient(135deg, $color-primary 0%, $color-teal-medium 100%);
             color: white;
-            box-shadow: 0 6px 20px rgba(7, 190, 184, 0.4), 0 2px 8px rgba(7, 190, 184, 0.2);
+            box-shadow: 0 8px 32px rgba(7, 190, 184, 0.3), 0 2px 8px rgba(7, 190, 184, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.2);
 
             &:hover {
-                background: linear-gradient(135deg, #059B96 0%, #07BEB8 50%, #3DCCC7 100%);
-                box-shadow: 0 8px 30px rgba(7, 190, 184, 0.5), 0 4px 12px rgba(7, 190, 184, 0.3);
+                background: linear-gradient(135deg, #059B96 0%, $color-primary 100%);
+                box-shadow: 0 12px 40px rgba(7, 190, 184, 0.4), 0 4px 12px rgba(7, 190, 184, 0.3);
                 transform: translateY(-4px);
-            }
-
-            &::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            &:hover::after {
-                opacity: 1;
             }
         }
 
         &--auth {
-            background: linear-gradient(310deg, #07beb8 0%, #3dccc7 50%, #4ec5c2 100%);
+            background: linear-gradient(135deg, $color-teal-medium 0%, $color-secondary 100%);
             color: white;
-            box-shadow: 0 6px 20px rgba(7, 190, 184, 0.4), 0 2px 8px rgba(7, 190, 184, 0.2);
+            box-shadow: 0 8px 32px rgba(7, 190, 184, 0.3), 0 2px 8px rgba(7, 190, 184, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.2);
 
             &:hover {
-                background: linear-gradient(135deg, #059B96 0%, #07BEB8 50%, #3DCCC7 100%);
-                box-shadow: 0 8px 30px rgba(7, 190, 184, 0.5), 0 4px 12px rgba(7, 190, 184, 0.3);
+                background: linear-gradient(135deg, $color-primary 0%, $color-teal-medium 100%);
+                box-shadow: 0 12px 40px rgba(7, 190, 184, 0.4), 0 4px 12px rgba(7, 190, 184, 0.3);
                 transform: translateY(-4px);
-            }
-
-            &::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-
-            &:hover::after {
-                opacity: 1;
             }
         }
     }
 
+    &__cta-icon {
+        font-size: 2rem;
+        margin-right: $spacing-lg;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    &__cta-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
     &__cta-text {
-        font-size: 1.375rem;
+        font-size: 1.25rem;
         font-weight: 700;
         font-family: $font-family-roboto;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         letter-spacing: 0.5px;
     }
 
     &__cta-subtext {
-        font-size: 0.9rem;
+        font-size: 0.875rem;
         opacity: 0.9;
         font-family: $font-family-roboto;
         font-weight: 500;
@@ -1019,21 +1076,58 @@ body {
 // =============================================================================
 
 .benefits {
-    background: white;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     padding: $spacing-xxl 0;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(7,190,184,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+        opacity: 0.3;
+    }
 
     &__content {
         max-width: 1200px;
         margin: 0 auto;
         padding: 0 $spacing-md;
+        position: relative;
+        z-index: 2;
+    }
+
+    &__header {
+        text-align: center;
+        margin-bottom: $spacing-2xl;
     }
 
     &__title {
-        font-size: 2.5rem;
-        font-weight: 700;
+        font-size: 3rem;
+        font-weight: 800;
         color: $color-text;
         text-align: center;
-        margin-bottom: $spacing-xl;
+        margin-bottom: $spacing-lg;
+        font-family: $font-family-roboto;
+        background: linear-gradient(135deg, $color-primary 0%, $color-teal-medium 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+
+        @include respond-to(sm) {
+            font-size: 3.5rem;
+        }
+    }
+
+    &__subtitle {
+        font-size: 1.25rem;
+        color: $color-text-secondary;
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
         font-family: $font-family-roboto;
     }
 
@@ -1367,6 +1461,78 @@ body {
 }
 
 // =============================================================================
+// STATS SECTION
+// =============================================================================
+
+.stats {
+    background: linear-gradient(135deg, $color-primary 0%, $color-teal-medium 100%);
+    padding: $spacing-xxl 0;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="stats-dots" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23stats-dots)"/></svg>');
+        opacity: 0.3;
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: $spacing-2xl;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 $spacing-md;
+        position: relative;
+        z-index: 2;
+
+        @include respond-to(md) {
+            grid-template-columns: repeat(4, 1fr);
+            gap: $spacing-xl;
+        }
+    }
+}
+
+.stat-item {
+    text-align: center;
+    color: white;
+
+    &__number {
+        font-size: 3rem;
+        font-weight: 800;
+        font-family: $font-family-roboto;
+        margin-bottom: $spacing-sm;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        line-height: 1;
+
+        @include respond-to(sm) {
+            font-size: 3.5rem;
+        }
+
+        @include respond-to(lg) {
+            font-size: 4rem;
+        }
+    }
+
+    &__label {
+        font-size: 1rem;
+        font-weight: 500;
+        font-family: $font-family-roboto;
+        opacity: 0.9;
+        letter-spacing: 0.5px;
+
+        @include respond-to(sm) {
+            font-size: 1.125rem;
+        }
+    }
+}
+
+// =============================================================================
 // ANIMATIONS
 // =============================================================================
 
@@ -1379,6 +1545,19 @@ body {
 
     50% {
         transform: translateY(-20px) rotate(180deg);
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0;
     }
 }
 

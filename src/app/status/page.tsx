@@ -4,16 +4,17 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { patientService, Patient } from '@/lib/patient-service';
 import { UserRole } from '@/lib/user-roles';
+import { motion } from 'framer-motion';
 import {
     Box,
     Typography,
     Card,
     CardContent,
     Chip,
-    CircularProgress,
     Alert,
     Container
 } from '@mui/material';
+import AnimatedLoading from '@/components/AnimatedLoading';
 import {
     Person as PersonIcon,
     Schedule as ScheduleIcon,
@@ -88,31 +89,7 @@ export default function StatusPage() {
     console.log('Auth Debug:', { user: user?.email, userRole, isAuthenticated, isGuest });
 
     if (loading || authLoading) {
-        return (
-            <Box sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '50vh',
-                p: 4
-            }}>
-                <CircularProgress
-                    size={60}
-                    sx={{
-                        color: '#07BEB8',
-                        mb: 2
-                    }}
-                />
-                <Typography
-                    variant="h6"
-                    color="text.secondary"
-                    sx={{ fontFamily: 'var(--font-roboto), Roboto, sans-serif' }}
-                >
-                    Loading patient status...
-                </Typography>
-            </Box>
-        );
+        return <AnimatedLoading message="Loading patient status..." />;
     }
 
     return (
@@ -224,8 +201,23 @@ export default function StatusPage() {
                     </Card>
                 ) : (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                        {patients.map((patient) => (
-                            <Box sx={{ flex: '1 1 350px', minWidth: 0 }} key={patient.id}>
+                        {patients.map((patient, index) => (
+                            <motion.div
+                                key={patient.id}
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{
+                                    duration: 0.5,
+                                    delay: index * 0.1,
+                                    ease: [0.25, 0.46, 0.45, 0.94]
+                                }}
+                                whileHover={{
+                                    y: -8,
+                                    scale: 1.02,
+                                    transition: { duration: 0.2 }
+                                }}
+                                style={{ flex: '1 1 350px', minWidth: 0 }}
+                            >
                                 <Card sx={{
                                     height: '100%',
                                     borderRadius: 3,
@@ -315,7 +307,7 @@ export default function StatusPage() {
                                         )}
                                     </CardContent>
                                 </Card>
-                            </Box>
+                            </motion.div>
                         ))}
                     </Box>
                 )}
