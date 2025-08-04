@@ -95,9 +95,7 @@ export default function Home() {
         initial="hidden"
         animate={isHeroInView ? "visible" : "hidden"}
       >
-        <div className="hero__background">
-          <div className="hero__background-overlay"></div>
-        </div>
+        <div className="hero__background"></div>
 
         <div className="hero__content">
           <motion.div
@@ -141,7 +139,7 @@ export default function Home() {
           >
             <p className="hero__description">
               At some point, you or a loved one may face surgery. While waiting, the uncertainty can be stressful.
-              image.pngCare Flow brings peace of mind by showing real-time updates on each step of the surgical process—so you’re never left wondering.
+              Care Flow brings peace of mind by showing real-time updates on each step of the surgical process—so you're never left wondering.
             </p>
           </motion.div>
 

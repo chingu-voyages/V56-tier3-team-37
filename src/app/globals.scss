@@ -241,20 +241,30 @@ body {
 
 // Footer Component
 .footer {
-    background: #f3f4f6;
-    color: #6b7280;
     padding: $spacing-xl 0;
     margin-top: auto;
+    background: var(--color-primary);
+    height: 3rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    z-index: 100;
+    padding-right: 18px;
 
     &__container {
-        max-width: 1200px;
-        margin: 0 auto;
         padding: 0 $spacing-md;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        height: 100%;
     }
 
     &__text {
-        font-size: 0.875rem;
+        font-size: 2rem;
         margin-bottom: $spacing-sm;
     }
 
@@ -271,7 +281,6 @@ body {
 // Hero Section
 .hero {
     min-height: 80vh;
-    background: linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 50%, #E0F7FA 100%);
     position: relative;
     @include flex-center;
     padding: $spacing-2xl 0;
@@ -283,16 +292,123 @@ body {
         left: 0;
         right: 0;
         bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(7,190,184,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(7,190,184,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(7,190,184,0.05)"/><circle cx="10" cy="60" r="0.5" fill="rgba(7,190,184,0.05)"/><circle cx="90" cy="40" r="0.5" fill="rgba(7,190,184,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
     }
 
-    &__background-overlay {
+    &__background {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(255, 255, 255, 0.1);
+        background-image:
+            linear-gradient(135deg,
+                rgba(255, 255, 255, 0.7) 0%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0.6) 100%),
+            url('/images/hero_img_desktop.png');
+        background-size: 100% auto;
+        background-position: center;
+        background-repeat: no-repeat;
+        z-index: 1;
+
+        // Professional subtle background animation
+        animation: heroBackgroundZoom 25s ease-in-out infinite;
+
+        @keyframes heroBackgroundZoom {
+            0% {
+                background-size: 100% auto;
+            }
+
+            25% {
+                background-size: 105% auto;
+            }
+
+            50% {
+                background-size: 110% auto;
+            }
+
+            75% {
+                background-size: 105% auto;
+            }
+
+            100% {
+                background-size: 100% auto;
+            }
+        }
+
+        @include respond-to(md) {
+            background-image:
+                linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.7) 0%,
+                    rgba(255, 255, 255, 0.5) 50%,
+                    rgba(255, 255, 255, 0.6) 100%),
+                url('/images/hero_img_desktop.png');
+            background-size: 100% auto;
+
+            // Professional subtle background animation for desktop
+            animation: heroBackgroundZoomDesktop 30s ease-in-out infinite;
+
+            @keyframes heroBackgroundZoomDesktop {
+                0% {
+                    background-size: 100% auto;
+                }
+
+                20% {
+                    background-size: 102% auto;
+                }
+
+                40% {
+                    background-size: 108% auto;
+                }
+
+                60% {
+                    background-size: 105% auto;
+                }
+
+                80% {
+                    background-size: 103% auto;
+                }
+
+                100% {
+                    background-size: 100% auto;
+                }
+            }
+        }
+
+        @media (max-width: 767px) {
+            background-image:
+                linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.7) 0%,
+                    rgba(255, 255, 255, 0.5) 50%,
+                    rgba(255, 255, 255, 0.6) 100%),
+                url('/images/hero_img_mobile.png');
+            background-size: 100% auto;
+
+            // Professional subtle background animation for mobile
+            animation: heroBackgroundZoomMobile 20s ease-in-out infinite;
+
+            @keyframes heroBackgroundZoomMobile {
+                0% {
+                    background-size: 100% auto;
+                }
+
+                30% {
+                    background-size: 103% auto;
+                }
+
+                50% {
+                    background-size: 106% auto;
+                }
+
+                70% {
+                    background-size: 104% auto;
+                }
+
+                100% {
+                    background-size: 100% auto;
+                }
+            }
+        }
     }
 
     &__content {
@@ -300,7 +416,22 @@ body {
         max-width: 48rem;
         padding: 0 $spacing-md;
         position: relative;
-        z-index: 2;
+        z-index: 3;
+
+        // Subtle parallax effect for premium feel
+        animation: contentParallax 15s ease-in-out infinite;
+
+        @keyframes contentParallax {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
     }
 
     &__badge {
@@ -322,8 +453,23 @@ body {
         font-weight: 800;
         margin-bottom: $spacing-lg;
         color: $color-text;
-        text-shadow: 0 2px 10px rgba(7, 190, 184, 0.2);
+        text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8);
         letter-spacing: -0.02em;
+
+        // Subtle glow animation for premium feel
+        animation: titleGlow 8s ease-in-out infinite;
+
+        @keyframes titleGlow {
+
+            0%,
+            100% {
+                text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8);
+            }
+
+            50% {
+                text-shadow: 0 2px 15px rgba(255, 255, 255, 0.9), 0 0 20px rgba(7, 190, 184, 0.3);
+            }
+        }
 
         @include respond-to(sm) {
             font-size: 5rem;
@@ -369,7 +515,8 @@ body {
         font-size: 1.125rem;
         line-height: 1.75;
         margin-bottom: $spacing-lg;
-        color: $color-text-secondary;
+        color: $color-text;
+        text-shadow: 0 1px 3px rgba(255, 255, 255, 0.6);
         max-width: 40rem;
         margin-left: auto;
         margin-right: auto;
@@ -1189,13 +1336,73 @@ body {
 
 .auth-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background-image:
+        linear-gradient(135deg,
+            rgba(255, 255, 255, 0.8) 0%,
+            rgba(255, 255, 255, 0.6) 50%,
+            rgba(255, 255, 255, 0.7) 100%),
+        url('/images/stock_photo_desktop.png');
+    background-size: 100% auto;
+    background-position: 141%;
+    background-repeat: repeat;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: $spacing-lg;
     position: relative;
     overflow: hidden;
+
+    // Stunning background zoom animation
+    animation: backgroundZoom 20s ease-in-out infinite;
+
+    // Optimize for performance
+    will-change: background-size;
+    transform: translateZ(0);
+
+    @keyframes backgroundZoom {
+        0% {
+            background-size: 100% auto;
+        }
+
+        50% {
+            background-size: 120% auto;
+        }
+
+        100% {
+            background-size: 100% auto;
+        }
+    }
+
+    // Mobile background zoom animation keyframes
+    @keyframes backgroundZoomMobile {
+        0% {
+            background-size: cover;
+        }
+
+        50% {
+            background-size: 120% 120%;
+        }
+
+        100% {
+            background-size: cover;
+        }
+    }
+
+    @media (max-width: 767px) {
+        background-image:
+            linear-gradient(135deg,
+                rgba(255, 255, 255, 0.8) 0%,
+                rgba(255, 255, 255, 0.6) 50%,
+                rgba(255, 255, 255, 0.7) 100%),
+            url('/images/stock_photo_mobile.png');
+        background-size: cover;
+        background-position: center;
+        animation: backgroundZoomMobile 15s ease-in-out infinite;
+
+        // Optimize for mobile performance
+        will-change: background-size;
+        transform: translateZ(0);
+    }
 
     &__container {
         position: relative;
@@ -1212,6 +1419,21 @@ body {
         overflow: hidden;
         position: relative;
         z-index: 10;
+
+        // Subtle floating animation for premium feel
+        animation: cardFloat 6s ease-in-out infinite;
+
+        @keyframes cardFloat {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
+        }
 
         &::before {
             content: '';
@@ -1247,6 +1469,21 @@ body {
         box-shadow: 0 12px 30px rgba(7, 190, 184, 0.4);
         position: relative;
         transition: all 0.3s ease;
+
+        // Pulsing glow animation for premium feel
+        animation: iconPulse 4s ease-in-out infinite;
+
+        @keyframes iconPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 12px 30px rgba(7, 190, 184, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 12px 40px rgba(7, 190, 184, 0.6);
+            }
+        }
 
         &:hover {
             transform: translateY(-2px);
@@ -1624,4 +1861,21 @@ body {
         box-shadow: none;
         border: 1px solid #e5e7eb;
     }
+}
+
+// =============================================================================
+// MAIN BACKGROUND
+// =============================================================================
+
+.main-background {
+    margin-bottom: 4rem;
+    background-image: url('/images/border_effect_desktop.png');
+    background-position: bottom center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    background-position: bottom;
+    background-repeat: no-repeat;
+    background-size: 100vw 9rem;
 }
