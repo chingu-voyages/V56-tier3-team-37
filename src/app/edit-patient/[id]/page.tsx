@@ -40,6 +40,7 @@ export default async function EditPatientPage({ params }: { params: { id: string
   const [fetchingPatient, setFetchingPatient] = useState(true);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [patient, setPatient] = useState<Patient | null>(null);
 
   const [formData, setFormData] = useState<CreatePatientData>({
@@ -99,6 +100,58 @@ export default async function EditPatientPage({ params }: { params: { id: string
     }
   };
 
+  // Client-side validation
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Name validation
+    if (!formData.name?.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    }
+
+    // Email validation
+    if (!formData.email?.trim()) {
+      newErrors.email = 'Email is required';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+    }
+
+    // Phone validation
+    if (!formData.phone?.trim()) {
+      newErrors.phone = 'Phone is required';
+    } else {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      const cleanPhone = formData.phone.replace(/[\s\-\(\)]/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        newErrors.phone = 'Please enter a valid phone number';
+      }
+    }
+
+    // Surgery type validation
+    if (!formData.surgeryType?.trim()) {
+      newErrors.surgeryType = 'Surgery type is required';
+    }
+
+    // Surgery date validation
+    if (!formData.surgeryDate) {
+      newErrors.surgeryDate = 'Surgery date is required';
+    } else {
+      const surgeryDate = new Date(formData.surgeryDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (surgeryDate < today) {
+        newErrors.surgeryDate = 'Surgery date cannot be in the past';
+      }
+    }
+
+    return newErrors;
+  };
+
   const handleInputChange = (field: keyof CreatePatientData) => (
     e: React.ChangeEvent<HTMLInputElement | { value: unknown }>
   ) => {
@@ -106,22 +159,29 @@ export default async function EditPatientPage({ params }: { params: { id: string
       ...prev,
       [field]: e.target.value
     }));
+
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate form
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({});
     setLoading(true);
     setError('');
     setSuccess(false);
 
     try {
-      // Basic validation
-      if (!formData.name.trim()) throw new Error('Name is required');
-      if (!formData.email.trim()) throw new Error('Email is required');
-      if (!formData.phone.trim()) throw new Error('Phone is required');
-      if (!formData.surgeryType.trim()) throw new Error('Surgery type is required');
-      if (!formData.surgeryDate) throw new Error('Surgery date is required');
-
       await patientService.updatePatient(patientId, formData);
       setSuccess(true);
 
@@ -216,6 +276,8 @@ export default async function EditPatientPage({ params }: { params: { id: string
                     label="Full Name"
                     value={formData.name}
                     onChange={handleInputChange('name')}
+                    error={!!errors.name}
+                    helperText={errors.name}
                     required
                     disabled={loading}
                   />
@@ -228,6 +290,8 @@ export default async function EditPatientPage({ params }: { params: { id: string
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange('email')}
+                    error={!!errors.email}
+                    helperText={errors.email}
                     required
                     disabled={loading}
                   />
@@ -239,6 +303,8 @@ export default async function EditPatientPage({ params }: { params: { id: string
                     label="Phone Number"
                     value={formData.phone}
                     onChange={handleInputChange('phone')}
+                    error={!!errors.phone}
+                    helperText={errors.phone}
                     required
                     disabled={loading}
                   />
@@ -262,6 +328,8 @@ export default async function EditPatientPage({ params }: { params: { id: string
                     label="Surgery Type"
                     value={formData.surgeryType}
                     onChange={handleInputChange('surgeryType')}
+                    error={!!errors.surgeryType}
+                    helperText={errors.surgeryType}
                     required
                     disabled={loading}
                     placeholder="e.g., Appendectomy, Heart Surgery"
@@ -275,6 +343,8 @@ export default async function EditPatientPage({ params }: { params: { id: string
                     type="date"
                     value={formData.surgeryDate}
                     onChange={handleInputChange('surgeryDate')}
+                    error={!!errors.surgeryDate}
+                    helperText={errors.surgeryDate}
                     required
                     disabled={loading}
                     InputLabelProps={{ shrink: true }}

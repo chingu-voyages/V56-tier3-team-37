@@ -2,9 +2,6 @@ export default function Footer() {
   return (
     <footer className="footer bg-gray-100 text-gray-700 p-4 mt-10">
       <div className="footer__container max-w-5xl mx-auto text-center">
-        <p className="footer__text mb-2">
-          © 2024 Care Flow. Built with Next.js, Firebase, and Material UI.
-        </p>
         <p className="footer__subtext mb-4">
           Reducing stress through real-time surgery updates and workflow transparency.
         </p>

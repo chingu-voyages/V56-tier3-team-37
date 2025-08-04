@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { patientService, CreatePatientData } from '@/lib/patient-service';
 import { UserRole } from '@/lib/user-roles';
 import { v4 as uuidv4 } from 'uuid';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -20,6 +21,7 @@ import {
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import RoleGuard from '@/components/RoleGuard';
+import BrandButton from '@/components/BrandButton';
 
 function generatePatientNumber() {
   const uuid = uuidv4().replace(/-/g, '');
@@ -55,23 +57,64 @@ export default function AddPatientPage() {
   // Client-side validation
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.firstName.trim()) newErrors.firstName = 'First Name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last Name is required';
-    if (!formData.dob.trim()) newErrors.dob = 'Date of Birth is required';
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
-    if (!formData.healthCareInsurance.trim()) newErrors.healthCareInsurance = 'Health Care Insurance is required';
 
-    if (formData.email) {
-      // Basic email regex
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        newErrors.email = 'Invalid email address';
-      }
-    } else {
-      newErrors.email = 'Email is required';
+    // First Name validation
+    if (!formData.firstName?.trim()) {
+      newErrors.firstName = 'First Name is required';
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = 'First Name must be at least 2 characters';
     }
 
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    // Last Name validation
+    if (!formData.lastName?.trim()) {
+      newErrors.lastName = 'Last Name is required';
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = 'Last Name must be at least 2 characters';
+    }
+
+    // Date of Birth validation
+    if (!formData.dob?.trim()) {
+      newErrors.dob = 'Date of Birth is required';
+    } else {
+      const dobDate = new Date(formData.dob);
+      const today = new Date();
+      if (dobDate > today) {
+        newErrors.dob = 'Date of Birth cannot be in the future';
+      }
+    }
+
+    // Address validation
+    if (!formData.address?.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (formData.address.trim().length < 5) {
+      newErrors.address = 'Address must be at least 5 characters';
+    }
+
+    // Health Care Insurance validation
+    if (!formData.healthCareInsurance?.trim()) {
+      newErrors.healthCareInsurance = 'Health Care Insurance is required';
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+    }
+
+    // Phone validation
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      const cleanPhone = formData.phone.replace(/[\s\-\(\)]/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        newErrors.phone = 'Please enter a valid phone number';
+      }
+    }
 
     return newErrors;
   };
@@ -82,6 +125,11 @@ export default function AddPatientPage() {
       ...prev,
       [name]: value,
     }));
+
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -199,138 +247,159 @@ export default function AddPatientPage() {
         <Card>
           <CardContent>
             <form onSubmit={handleSubmit}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                {/* First Name */}
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="First Name"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    error={!!errors.firstName}
-                    helperText={errors.firstName}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                {/* Last Name */}
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Last Name"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    error={!!errors.lastName}
-                    helperText={errors.lastName}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                {/* Date of Birth */}
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Date of Birth"
-                    type="date"
-                    name="dob"
-                    value={formData.dob}
-                    onChange={handleChange}
-                    error={!!errors.dob}
-                    helperText={errors.dob}
-                    required
-                    disabled={loading}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Box>
-
-                {/* Phone Number */}
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Phone Number"
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    error={!!errors.phone}
-                    helperText={errors.phone}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                {/* Address */}
-                <Box sx={{ flex: '1 1 100%' }}>
-                  <TextField
-                    fullWidth
-                    label="Address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    error={!!errors.address}
-                    helperText={errors.address}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                {/* Health Care Insurance */}
-                <Box sx={{ flex: '1 1 100%' }}>
-                  <TextField
-                    fullWidth
-                    label="Health Care Insurance"
-                    name="healthCareInsurance"
-                    value={formData.healthCareInsurance}
-                    onChange={handleChange}
-                    error={!!errors.healthCareInsurance}
-                    helperText={errors.healthCareInsurance}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                {/* Email */}
-                <Box sx={{ flex: '1 1 100%' }}>
-                  <TextField
-                    fullWidth
-                    label="Email Address"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    error={!!errors.email}
-                    helperText={errors.email}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                {/* Submit Buttons */}
-                <Box sx={{ flex: '1 1 100%' }}>
-                  <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <Button
-                      variant="outlined"
-                      component={Link}
-                      href="/patients"
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                  {/* First Name */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    style={{ flex: '1 1 300px', minWidth: 0 }}
+                  >
+                    <TextField
+                      fullWidth
+                      label="First Name"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      error={!!errors.firstName}
+                      helperText={errors.firstName}
+                      required
                       disabled={loading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+                    />
+                  </motion.div>
+
+                  {/* Last Name */}
+                  <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                    <TextField
+                      fullWidth
+                      label="Last Name"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      error={!!errors.lastName}
+                      helperText={errors.lastName}
+                      required
                       disabled={loading}
-                    >
-                      {loading ? 'Saving...' : 'Save Patient'}
-                    </Button>
+                    />
+                  </Box>
+
+                  {/* Date of Birth */}
+                  <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                    <TextField
+                      fullWidth
+                      label="Date of Birth"
+                      type="date"
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleChange}
+                      error={!!errors.dob}
+                      helperText={errors.dob}
+                      required
+                      disabled={loading}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Box>
+
+                  {/* Phone Number */}
+                  <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                    <TextField
+                      fullWidth
+                      label="Phone Number"
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      error={!!errors.phone}
+                      helperText={errors.phone}
+                      required
+                      disabled={loading}
+                    />
+                  </Box>
+
+                  {/* Address */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <TextField
+                      fullWidth
+                      label="Address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      error={!!errors.address}
+                      helperText={errors.address}
+                      required
+                      disabled={loading}
+                    />
+                  </Box>
+
+                  {/* Health Care Insurance */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <TextField
+                      fullWidth
+                      label="Health Care Insurance"
+                      name="healthCareInsurance"
+                      value={formData.healthCareInsurance}
+                      onChange={handleChange}
+                      error={!!errors.healthCareInsurance}
+                      helperText={errors.healthCareInsurance}
+                      required
+                      disabled={loading}
+                    />
+                  </Box>
+
+                  {/* Email */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <TextField
+                      fullWidth
+                      label="Email Address"
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      error={!!errors.email}
+                      helperText={errors.email}
+                      required
+                      disabled={loading}
+                    />
+                  </Box>
+
+                  {/* Submit Buttons */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                      <Button
+                        variant="outlined"
+                        component={Link}
+                        href="/patients"
+                        disabled={loading}
+                        sx={{
+                          borderRadius: 2,
+                          px: 3,
+                          py: 1.5,
+                          borderColor: '#07BEB8',
+                          color: '#07BEB8',
+                          '&:hover': {
+                            borderColor: '#059B96',
+                            backgroundColor: 'rgba(7, 190, 184, 0.04)'
+                          }
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <BrandButton
+                        type="submit"
+                        startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+                        disabled={loading}
+                      >
+                        {loading ? 'Saving...' : 'Save Patient'}
+                      </BrandButton>
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
+              </motion.div>
             </form>
           </CardContent>
         </Card>
