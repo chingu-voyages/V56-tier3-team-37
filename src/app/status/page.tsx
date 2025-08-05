@@ -241,7 +241,7 @@ export default function StatusPage() {
                                                     fontFamily: 'var(--font-roboto), Roboto, sans-serif'
                                                 }}
                                             >
-                                                {isGuest ? `Patient ${patient.patientNumber || patient.patientId || 'Loading...'}` : patient.name}
+                                                {isGuest ? `Patient ${patient.patientId || 'Loading...'}` : patient.name}
                                             </Typography>
                                         </Box>
 

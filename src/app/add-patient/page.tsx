@@ -22,11 +22,10 @@ import {
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import RoleGuard from '@/components/RoleGuard';
 import BrandButton from '@/components/BrandButton';
+import BrandLoader from '@/components/BrandLoader';
+import InlineLoader from '@/components/InlineLoader';
 
-function generatePatientNumber() {
-  const uuid = uuidv4().replace(/-/g, '');
-  return uuid.substring(0, 6).toUpperCase();
-}
+// Patient number generation is now handled automatically by the patient service
 
 export default function AddPatientPage() {
   const { user, loading: authLoading } = useAuth();
@@ -43,7 +42,7 @@ export default function AddPatientPage() {
     healthCareInsurance: '',
     email: '',
     phone: '',
-    patientNumber: '',
+    patientId: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -146,26 +145,9 @@ export default function AddPatientPage() {
     setSuccess(false);
 
     try {
-      const patientId = uuidv4();
-
-      // Generate a unique patient number
-      let patientNumber = generatePatientNumber();
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      // Keep generating until we get a unique number or reach max attempts
-      while (await patientService.checkPatientNumberExists(patientNumber) && attempts < maxAttempts) {
-        patientNumber = generatePatientNumber();
-        attempts++;
-      }
-
-      if (attempts >= maxAttempts) {
-        throw new Error('Unable to generate unique patient number. Please try again.');
-      }
-
+      // Patient number will be generated automatically by the service
       await patientService.addPatient({
         ...formData,
-        patientNumber,
         name: `${formData.firstName} ${formData.lastName}`.trim(),
         dateOfBirth: formData.dob,
       });
@@ -181,7 +163,7 @@ export default function AddPatientPage() {
         healthCareInsurance: '',
         email: '',
         phone: '',
-        patientNumber: '',
+        patientId: '',
       });
 
       // Redirect after a short delay
@@ -210,6 +192,7 @@ export default function AddPatientPage() {
 
   return (
     <RoleGuard requiredRole={UserRole.ADMIN}>
+      {loading && <BrandLoader fullScreen message="Saving patient..." />}
       <Box sx={{ p: 3 }}>
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link href="/patients" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -270,6 +253,20 @@ export default function AddPatientPage() {
                       helperText={errors.firstName}
                       required
                       disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
                     />
                   </motion.div>
 
@@ -285,6 +282,20 @@ export default function AddPatientPage() {
                       helperText={errors.lastName}
                       required
                       disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
                     />
                   </Box>
 
@@ -302,6 +313,20 @@ export default function AddPatientPage() {
                       required
                       disabled={loading}
                       InputLabelProps={{ shrink: true }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
                     />
                   </Box>
 
@@ -318,6 +343,20 @@ export default function AddPatientPage() {
                       helperText={errors.phone}
                       required
                       disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
                     />
                   </Box>
 
@@ -333,6 +372,20 @@ export default function AddPatientPage() {
                       helperText={errors.address}
                       required
                       disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
                     />
                   </Box>
 
@@ -348,6 +401,20 @@ export default function AddPatientPage() {
                       helperText={errors.healthCareInsurance}
                       required
                       disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
                     />
                   </Box>
 
@@ -364,34 +431,73 @@ export default function AddPatientPage() {
                       helperText={errors.email}
                       required
                       disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
                     />
                   </Box>
 
                   {/* Submit Buttons */}
                   <Box sx={{ flex: '1 1 100%' }}>
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                       <Button
-                        variant="outlined"
                         component={Link}
                         href="/patients"
                         disabled={loading}
                         sx={{
-                          borderRadius: 2,
-                          px: 3,
-                          py: 1.5,
-                          borderColor: '#07BEB8',
-                          color: '#07BEB8',
+                          borderRadius: '50px',
+                          px: 4,
+                          py: 1,
+                          minHeight: 40,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#07BEB8',
+                          color: 'white',
+                          fontWeight: 700,
+                          fontSize: '1rem',
+                          textTransform: 'none',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          letterSpacing: '0.5px',
+                          textAlign: 'center',
+                          boxShadow: '0 4px 12px rgba(7, 190, 184, 0.3)',
                           '&:hover': {
-                            borderColor: '#059B96',
-                            backgroundColor: 'rgba(7, 190, 184, 0.04)'
-                          }
+                            background: '#059B96',
+                            boxShadow: '0 6px 20px rgba(7, 190, 184, 0.4)',
+                            transform: 'translateY(-1px)'
+                          },
+                          '&:focus': {
+                            boxShadow: '0 0 0 3px rgba(7, 190, 184, 0.2), 0 4px 12px rgba(7, 190, 184, 0.3)'
+                          },
+                          '&:active': {
+                            transform: 'translateY(0px)',
+                            boxShadow: '0 2px 8px rgba(7, 190, 184, 0.3)'
+                          },
+                          '&:disabled': {
+                            background: '#9CA3AF',
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            boxShadow: '0 2px 8px rgba(156, 163, 175, 0.2)',
+                            transform: 'none'
+                          },
+                          transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
                         }}
                       >
                         Cancel
                       </Button>
                       <BrandButton
                         type="submit"
-                        startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+                        startIcon={loading ? <InlineLoader size={20} /> : <SaveIcon />}
                         disabled={loading}
                       >
                         {loading ? 'Saving...' : 'Save Patient'}

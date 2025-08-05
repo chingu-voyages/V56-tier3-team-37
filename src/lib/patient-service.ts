@@ -61,8 +61,15 @@ class PatientService {
   async addPatient(patientData: CreatePatientData): Promise<string> {
     try {
       const now = Timestamp.now();
+      
+      // Generate a unique patient number if not provided
+      let finalPatientData = { ...patientData };
+      if (!patientData.patientId) {
+        finalPatientData.patientId = await this.generateUniquePatientNumber();
+      }
+      
       const docRef = await addDoc(collection(db, this.collectionName), {
-        ...patientData,
+        ...finalPatientData,
         createdAt: now,
         updatedAt: now,
       });
@@ -162,7 +169,7 @@ class PatientService {
     try {
       const q = query(
         collection(db, this.collectionName),
-        where('patientNumber', '==', patientNumber)
+        where('patientId', '==', patientNumber)
       );
       const querySnapshot = await getDocs(q);
       return !querySnapshot.empty;
@@ -192,6 +199,24 @@ class PatientService {
     }
 
     return patientNumber;
+  }
+
+  // Generate patient numbers for existing patients that don't have them
+  async generatePatientNumbersForExistingPatients(): Promise<void> {
+    try {
+      const patients = await this.getPatients();
+      const patientsWithoutNumbers = patients.filter(p => !p.patientId);
+      
+      for (const patient of patientsWithoutNumbers) {
+        if (patient.id) {
+          const patientNumber = await this.generateUniquePatientNumber();
+          await this.updatePatient(patient.id, { patientId: patientNumber });
+        }
+      }
+    } catch (error) {
+      console.error('Error generating patient numbers for existing patients:', error);
+      throw new Error('Failed to generate patient numbers for existing patients');
+    }
   }
 }
 

@@ -37,6 +37,8 @@ import {
   Tooltip
 } from '@mui/material';
 import BrandButton from '@/components/BrandButton';
+import BrandLoader from '@/components/BrandLoader';
+import InlineLoader from '@/components/InlineLoader';
 import {
   Add as AddIcon,
   Refresh as RefreshIcon,
@@ -71,6 +73,7 @@ export default function PatientsPage() {
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState(false);
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [generatingNumbers, setGeneratingNumbers] = useState(false);
 
   const [editFormData, setEditFormData] = useState<CreatePatientData>({
     firstName: '',
@@ -115,7 +118,7 @@ export default function PatientsPage() {
     const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient.phone.includes(searchTerm) ||
-      (patient.patientNumber && patient.patientNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (patient.patientId && patient.patientId.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (patient.surgeryType && patient.surgeryType.toLowerCase().includes(searchTerm.toLowerCase()));
 
     // Last name specific search
@@ -145,6 +148,22 @@ export default function PatientsPage() {
     }
   };
 
+  const generatePatientNumbersForExisting = async () => {
+    try {
+      setGeneratingNumbers(true);
+      setError('');
+      await patientService.generatePatientNumbersForExistingPatients();
+      await fetchPatients(); // Refresh the list
+      setShowDeletedAlert(true); // Show success message
+      // Reset the alert after 3 seconds
+      setTimeout(() => setShowDeletedAlert(false), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate patient numbers');
+    } finally {
+      setGeneratingNumbers(false);
+    }
+  };
+
   const handleEditPatient = (patient: Patient) => {
     setEditingPatient(patient);
     setEditFormData({
@@ -155,7 +174,7 @@ export default function PatientsPage() {
       healthCareInsurance: patient.healthCareInsurance || '',
       email: patient.email || '',
       phone: patient.phone || '',
-      patientNumber: patient.patientNumber || '',
+      patientNumber: patient.patientId || '',
       surgeryType: patient.surgeryType || '',
       surgeryDate: patient.surgeryDate || '',
       status: patient.status || 'scheduled',
@@ -318,11 +337,7 @@ export default function PatientsPage() {
   };
 
   if (authLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <BrandLoader message="Loading..." />;
   }
 
   if (!user) {
@@ -406,7 +421,7 @@ export default function PatientsPage() {
               }
             }}
           >
-            Patient deleted successfully!
+            Operation completed successfully!
           </Alert>
         )}
 
@@ -427,31 +442,7 @@ export default function PatientsPage() {
         )}
 
         {loading ? (
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            p: 8,
-            background: 'white',
-            borderRadius: 3,
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
-          }}>
-            <CircularProgress
-              size={60}
-              sx={{
-                color: '#07BEB8',
-                mb: 2
-              }}
-            />
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              sx={{ fontFamily: 'var(--font-roboto), Roboto, sans-serif' }}
-            >
-              Loading patients...
-            </Typography>
-          </Box>
+          <BrandLoader message="Loading patients..." />
         ) : patients.length === 0 ? (
           <Card sx={{
             borderRadius: 3,
@@ -634,6 +625,23 @@ export default function PatientsPage() {
                 >
                   Clear Filters
                 </Button>
+                <Button
+                  variant="contained"
+                  onClick={generatePatientNumbersForExisting}
+                  disabled={generatingNumbers}
+                  startIcon={generatingNumbers ? <InlineLoader size={16} /> : <UpdateIcon />}
+                  sx={{
+                    background: 'linear-gradient(135deg, #07BEB8 0%, #059669 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                    },
+                    '&:disabled': {
+                      background: '#9CA3AF'
+                    }
+                  }}
+                >
+                  {generatingNumbers ? 'Generating...' : 'Generate Patient Numbers'}
+                </Button>
               </Box>
 
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
@@ -771,7 +779,7 @@ export default function PatientsPage() {
                             color: '#6B7280',
                             fontWeight: 500
                           }}>
-                            {patient.patientNumber || 'N/A'}
+                            {patient.patientId || 'N/A'}
                           </TableCell>
                           <TableCell sx={{
                             fontFamily: 'var(--font-roboto), Roboto, sans-serif',
@@ -855,6 +863,24 @@ export default function PatientsPage() {
                                   <UpdateIcon />
                                 </IconButton>
                               </Tooltip>
+                              <Tooltip title="Edit Patient Details" arrow>
+                                <IconButton
+                                  component={Link}
+                                  href={`/edit-patient/${patient.id}`}
+                                  disabled={!patient.id}
+                                  sx={{
+                                    color: '#059669',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                      transform: 'scale(1.1)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                  aria-label={`Edit details for ${patient.name}`}
+                                >
+                                  <EditIcon />
+                                </IconButton>
+                              </Tooltip>
                               <IconButton
                                 component={Link}
                                 href={`/delete-patient?id=${patient.id}`}
@@ -920,7 +946,7 @@ export default function PatientsPage() {
                   color: '#6B7280',
                   fontFamily: 'var(--font-roboto), Roboto, sans-serif'
                 }}>
-                  Patient: {editingPatient.name} (ID: {editingPatient.patientNumber || editingPatient.patientId || editingPatient.id})
+                  Patient: {editingPatient.name} (ID: {editingPatient.patientId || editingPatient.id})
                 </Typography>
               )}
             </Box>
@@ -1250,7 +1276,7 @@ export default function PatientsPage() {
             <BrandButton
               onClick={handleUpdatePatient}
               disabled={editLoading}
-              startIcon={editLoading ? <CircularProgress size={20} color="inherit" /> : undefined}
+              startIcon={editLoading ? <InlineLoader size={20} /> : undefined}
             >
               {editLoading ? 'Updating...' : 'Update'}
             </BrandButton>
