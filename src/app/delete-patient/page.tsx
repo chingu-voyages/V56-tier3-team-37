@@ -402,14 +402,14 @@ export default function DeletePatientPage() {
                       Surgery Type: {patient.surgeryType}
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
-                      Surgery Date: {formatDate(patient.surgeryDate)}
+                      Surgery Date: {formatDate(patient.surgeryDate!)}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
                         Status:
                       </Typography>
                       <Chip
-                        label={patient.status.replace('-', ' ')}
+                        label={patient.status!.replace('-', ' ')}
                         color={getStatusColor(patient.status)}
                         size="small"
                         sx={{
