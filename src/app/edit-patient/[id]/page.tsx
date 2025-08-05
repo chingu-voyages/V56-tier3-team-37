@@ -25,13 +25,7 @@ import {
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import RoleGuard from '@/components/RoleGuard';
 
-// ✅ Required by static export
-export async function generateStaticParams() {
-  const patients = await patientService.getPatients();
-  return patients.map((p) => ({ id: p.id }));
-}
-
-export default async function EditPatientPage({ params }: { params: { id: string } }) {
+export default function EditPatientPage({ params }: { params: { id: string } }) {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const patientId = params.id as string;
