@@ -1,5 +1,5 @@
 [build]
-  command = "npm ci --force --ignore-scripts && npm run build"
+  command = "npm install --force --ignore-scripts && npm run build"
   publish = "out"
   base = "."
 
