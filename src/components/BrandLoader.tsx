@@ -1,7 +1,8 @@
 'use client';
 
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { motion } from 'framer-motion';
+import { BoxesLoader } from 'react-awesome-loaders';
 
 interface BrandLoaderProps {
     size?: number;
@@ -45,41 +46,12 @@ export default function BrandLoader({
                     ...containerStyle
                 }}
             >
-                {/* Main Spinner */}
-                <Box sx={{ position: 'relative', mb: 2 }}>
-                    <CircularProgress
-                        size={size}
-                        thickness={4}
-                        sx={{
-                            color: '#07BEB8',
-                            '& .MuiCircularProgress-circle': {
-                                strokeLinecap: 'round',
-                            },
-                        }}
-                    />
-
-                    {/* Inner Pulse Effect */}
-                    <motion.div
-                        animate={{
-                            scale: [1, 1.2, 1],
-                            opacity: [0.3, 0.6, 0.3],
-                        }}
-                        transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }}
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: size * 0.6,
-                            height: size * 0.6,
-                            borderRadius: '50%',
-                            backgroundColor: '#07BEB8',
-                            opacity: 0.3,
-                        }}
+                {/* BoxesLoader */}
+                <Box sx={{ mb: 2 }}>
+                    <BoxesLoader
+                        boxColor="#07BEB8"
+                        desktopSize="128px"
+                        mobileSize="80px"
                     />
                 </Box>
 
@@ -107,31 +79,6 @@ export default function BrandLoader({
                         {message}
                     </Box>
                 </motion.div>
-
-                {/* Dots Animation */}
-                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                    {[0, 1, 2].map((index) => (
-                        <motion.div
-                            key={index}
-                            animate={{
-                                y: [0, -8, 0],
-                                opacity: [0.4, 1, 0.4],
-                            }}
-                            transition={{
-                                duration: 1.2,
-                                repeat: Infinity,
-                                delay: index * 0.2,
-                                ease: "easeInOut"
-                            }}
-                            style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: '50%',
-                                backgroundColor: '#07BEB8',
-                            }}
-                        />
-                    ))}
-                </Box>
             </Box>
         </motion.div>
     );

@@ -1,7 +1,8 @@
 'use client';
 
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { motion } from 'framer-motion';
+import { BoxesLoader } from 'react-awesome-loaders';
 
 interface InlineLoaderProps {
     size?: number;
@@ -23,15 +24,10 @@ export default function InlineLoader({
             }}
         >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CircularProgress
-                    size={size}
-                    thickness={3}
-                    sx={{
-                        color: color,
-                        '& .MuiCircularProgress-circle': {
-                            strokeLinecap: 'round',
-                        },
-                    }}
+                <BoxesLoader
+                    boxColor={color}
+                    desktopSize={`${size}px`}
+                    mobileSize={`${size}px`}
                 />
             </Box>
         </motion.div>

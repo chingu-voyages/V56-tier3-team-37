@@ -14,7 +14,7 @@ import {
     Alert,
     Container
 } from '@mui/material';
-import AnimatedLoading from '@/components/AnimatedLoading';
+import BrandLoader from '@/components/BrandLoader';
 import {
     Person as PersonIcon,
     Schedule as ScheduleIcon,
@@ -89,7 +89,7 @@ export default function StatusPage() {
     console.log('Auth Debug:', { user: user?.email, userRole, isAuthenticated, isGuest });
 
     if (loading || authLoading) {
-        return <AnimatedLoading message="Loading patient status..." />;
+        return <BrandLoader message="Loading patient status..." />;
     }
 
     return (
