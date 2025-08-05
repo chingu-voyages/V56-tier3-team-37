@@ -5,6 +5,8 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  PYTHON = "/usr/bin/python3"
+  npm_config_python = "/usr/bin/python3"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
