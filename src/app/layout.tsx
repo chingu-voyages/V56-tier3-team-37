@@ -44,7 +44,7 @@ export default function RootLayout({
             <ClientWrapper>
               <div className="min-h-screen flex flex-col">
                 <Header />
-                <main className="flex-1">
+                <main className="flex-1 main-background">
                   {children}
                 </main>
                 <Footer />

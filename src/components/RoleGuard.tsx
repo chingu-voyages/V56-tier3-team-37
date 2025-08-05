@@ -82,7 +82,7 @@ export default function RoleGuard({
                         p: 4,
                         textAlign: 'center',
                         borderRadius: 3,
-                        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+
                     }}
                 >
                     <SecurityIcon

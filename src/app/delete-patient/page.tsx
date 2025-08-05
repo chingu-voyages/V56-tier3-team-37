@@ -148,7 +148,6 @@ export default function DeletePatientPage() {
     <RoleGuard requiredRole={UserRole.SURGICAL_TEAM}>
       <Box sx={{
         p: 4,
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
         minHeight: '100vh'
       }}>
         {/* Page Header */}
