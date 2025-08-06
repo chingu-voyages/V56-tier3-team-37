@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -29,7 +29,8 @@ import {
   Person as PersonIcon
 } from '@mui/icons-material';
 
-export default function DeletePatientPage() {
+// Component that uses useSearchParams
+function DeletePatientContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -607,5 +608,23 @@ export default function DeletePatientPage() {
         </Dialog>
       </Box>
     </RoleGuard>
+  );
+}
+
+// Loading fallback component
+function DeletePatientLoading() {
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <CircularProgress />
+    </Box>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function DeletePatientPage() {
+  return (
+    <Suspense fallback={<DeletePatientLoading />}>
+      <DeletePatientContent />
+    </Suspense>
   );
 }
