@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -50,7 +50,7 @@ import {
   Update as UpdateIcon
 } from '@mui/icons-material';
 
-export default function PatientsPage() {
+function PatientsPageContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1284,5 +1284,13 @@ export default function PatientsPage() {
         </Dialog>
       </Box>
     </RoleGuard>
+  );
+}
+
+export default function PatientsPage() {
+  return (
+    <Suspense fallback={<BrandLoader message="Loading..." />}>
+      <PatientsPageContent />
+    </Suspense>
   );
 }
