@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitHub } from '@mui/icons-material';
 import {
@@ -23,36 +23,85 @@ interface TeamMember {
   name: string;
   github: string;
   linkedin?: string;
-  role: 'Developer' | 'UI/UX Designer' | 'Scrum Master' | 'Product Owner';
+  role: 'Developers' | 'UI/UX Designer' | 'Scrum Master' | 'Product Owner';
   gender: 'male' | 'female';
   imageName: string;
 }
 
 const teamMembers: TeamMember[] = [
-  { name: 'Cristian Torres', github: 'https://github.com/cristiantorresf19191919', role: 'Developer', gender: 'male', imageName: 'Cristian.jpeg' },
-  { name: 'Vincent Bui', github: 'https://github.com/VincentBui0', linkedin: 'https://www.linkedin.com/in/vincent-bui0', role: 'Developer', gender: 'male', imageName: 'vincent.jpeg' },
+  { name: 'Cristian Torres', github: 'https://github.com/cristiantorresf19191919', role: 'Developers', gender: 'male', imageName: 'Cristian.jpeg' },
+  { name: 'Vincent Bui', github: 'https://github.com/VincentBui0', linkedin: 'https://www.linkedin.com/in/vincent-bui0', role: 'Developers', gender: 'male', imageName: 'vincent.jpeg' },
   { name: 'Jessica Hackett', github: 'https://github.com/mooglemoxie0018', linkedin: 'https://www.linkedin.com/in/jessica-hackett/', role: 'UI/UX Designer', gender: 'female', imageName: 'Jessica.jpeg' },
   { name: 'Ruth Igwe-Oruta', github: 'https://github.com/Xondacc', linkedin: 'https://www.linkedin.com/in/ruthigwe-oruta/', role: 'Product Owner', gender: 'female', imageName: 'Ruth.jpeg' },
   { name: 'Dorene St.Marthe', github: 'https://github.com/Dorene-StMarthe/', linkedin: 'https://www.linkedin.com/in/dorenestmarthe/', role: 'Scrum Master', gender: 'female', imageName: 'Dorene.jpeg' },
 ];
 
-const roleColors = {
-  'Developer': '#07BEB8',
-  'UI/UX Designer': '#FF6B6B',
-  'Scrum Master': '#4ECDC4',
-  'Product Owner': '#45B7D1'
+const availableColors = [
+  '#07BEB8', // Teal
+  '#FF6B6B', // Red/Orange
+  '#00CED1', // Dark Turquoise
+  '#4169E1', // Royal Blue
+  '#FF8E53', // Orange
+  '#32CD32', // Lime Green
+  '#FF1493', // Deep Pink
+  '#228B22', // Forest Green
+  '#8B4513', // Saddle Brown
+  '#9B59B6', // Purple
+  '#1E90FF', // Dodger Blue
+  '#E74C3C', // Red
+  '#2ECC71', // Green
+  '#FF4500', // Orange Red
+  '#20B2AA', // Light Sea Green
+  '#8A2BE2', // Blue Violet
+  '#DC143C', // Crimson
+  '#00FA9A', // Medium Spring Green
+  '#FF6347', // Tomato
+  '#9370DB', // Medium Purple
+  '#3CB371', // Medium Sea Green
+  '#FF69B4', // Hot Pink
+  '#4682B4', // Steel Blue
+  '#9932CC', // Dark Orchid
+  '#B8860B', // Dark Goldenrod
+  '#006400', // Dark Green
+  '#191970', // Midnight Blue
+  '#8B008B', // Dark Magenta
+  '#B22222', // Fire Brick
+];
+
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 };
 
 export default function Footer() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const groupedMembers = teamMembers.reduce((acc, member) => {
-    if (!acc[member.role]) {
-      acc[member.role] = [];
-    }
-    acc[member.role].push(member);
-    return acc;
-  }, {} as Record<string, TeamMember[]>);
+  const { groupedMembers, roleColors } = useMemo(() => {
+    const grouped = teamMembers.reduce((acc, member) => {
+      if (!acc[member.role]) {
+        acc[member.role] = [];
+      }
+      acc[member.role].push(member);
+      return acc;
+    }, {} as Record<string, TeamMember[]>);
+
+    const shuffledEntries = shuffleArray(Object.entries(grouped));
+
+    const shuffledGrouped = Object.fromEntries(shuffledEntries);
+
+    const shuffledColors = shuffleArray(availableColors);
+    const roleColors: Record<string, string> = {};
+
+    Object.keys(shuffledGrouped).forEach((role, index) => {
+      roleColors[role] = shuffledColors[index % shuffledColors.length];
+    });
+
+    return { groupedMembers: shuffledGrouped, roleColors };
+  }, [drawerOpen]);
 
   return (
     <>
@@ -143,7 +192,7 @@ export default function Footer() {
                       <Chip
                         label={role}
                         sx={{
-                          backgroundColor: roleColors[role as keyof typeof roleColors],
+                          backgroundColor: roleColors[role],
                           color: 'white',
                           fontWeight: 600,
                           fontSize: '0.9rem',
