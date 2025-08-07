@@ -18,7 +18,9 @@ import {
     SmartToy as AIIcon,
     Send as SendIcon,
     Close as CloseIcon,
-    Chat as ChatIcon
+    Chat as ChatIcon,
+    Fullscreen as MaximizeIcon,
+    FullscreenExit as MinimizeIcon
 } from '@mui/icons-material';
 
 interface Message {
@@ -30,6 +32,7 @@ interface Message {
 
 export default function FloatingChat() {
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [isMaximized, setIsMaximized] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
@@ -101,6 +104,10 @@ export default function FloatingChat() {
         }
     };
 
+    const toggleMaximize = () => {
+        setIsMaximized(!isMaximized);
+    };
+
     return (
         <>
             {/* Floating Chat Button */}
@@ -143,11 +150,26 @@ export default function FloatingChat() {
                         onClose={() => setDrawerOpen(false)}
                         PaperProps={{
                             sx: {
-                                width: { xs: '100%', sm: 400 },
+                                width: isMaximized ? '100%' : { xs: '100%', sm: 400 },
                                 maxWidth: '100vw',
                                 backgroundColor: '#ffffff',
-                                borderLeft: '1px solid rgba(7, 190, 184, 0.1)',
-                                boxShadow: '-4px 0 20px rgba(0,0,0,0.1)'
+                                borderLeft: isMaximized ? 'none' : '1px solid rgba(7, 190, 184, 0.1)',
+                                boxShadow: isMaximized ? 'none' : '-4px 0 20px rgba(0,0,0,0.1)',
+                                height: isMaximized ? '100vh' : 'auto',
+                                position: isMaximized ? 'fixed' : 'fixed',
+                                top: isMaximized ? 0 : 'auto',
+                                right: isMaximized ? 0 : '0',
+                                left: isMaximized ? 'auto' : 'auto',
+                                ...(!isMaximized && {
+                                    bottom: 0,
+                                    top: 0
+                                }),
+                                zIndex: isMaximized ? 9999 : 1000,
+                                transform: isMaximized ? 'none' : 'translateX(0)',
+                                '&.MuiDrawer-paper': {
+                                    right: 0,
+                                    left: 'auto !important'
+                                }
                             }
                         }}
                         transitionDuration={300}
@@ -178,17 +200,30 @@ export default function FloatingChat() {
                                             </Typography>
                                         </Box>
                                     </Box>
-                                    <IconButton
-                                        onClick={() => setDrawerOpen(false)}
-                                        sx={{
-                                            color: 'white',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(255,255,255,0.1)'
-                                            }
-                                        }}
-                                    >
-                                        <CloseIcon />
-                                    </IconButton>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <IconButton
+                                            onClick={toggleMaximize}
+                                            sx={{
+                                                color: 'white',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255,255,255,0.1)'
+                                                }
+                                            }}
+                                        >
+                                            {isMaximized ? <MinimizeIcon /> : <MaximizeIcon />}
+                                        </IconButton>
+                                        <IconButton
+                                            onClick={() => setDrawerOpen(false)}
+                                            sx={{
+                                                color: 'white',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255,255,255,0.1)'
+                                                }
+                                            }}
+                                        >
+                                            <CloseIcon />
+                                        </IconButton>
+                                    </Box>
                                 </Box>
                             </Box>
 
@@ -235,7 +270,7 @@ export default function FloatingChat() {
                                                         backgroundColor: message.sender === 'user'
                                                             ? 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)'
                                                             : '#f8fafc',
-                                                        color: message.sender === 'user' ? 'white' : '#1f2937',
+                                                        color: '#1f2937',
                                                         borderRadius: 2,
                                                         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                                                         maxWidth: '100%',
@@ -243,14 +278,16 @@ export default function FloatingChat() {
                                                     }}>
                                                         <Typography variant="body1" sx={{
                                                             fontWeight: 500,
-                                                            lineHeight: 1.5
+                                                            lineHeight: 1.5,
+                                                            color: '#1f2937'
                                                         }}>
                                                             {message.text}
                                                         </Typography>
                                                         <Typography variant="caption" sx={{
                                                             opacity: 0.7,
                                                             mt: 1,
-                                                            display: 'block'
+                                                            display: 'block',
+                                                            color: '#1f2937'
                                                         }}>
                                                             {message.timestamp.toLocaleTimeString([], {
                                                                 hour: '2-digit',
@@ -269,7 +306,7 @@ export default function FloatingChat() {
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        sx={{ display: 'flex', justifyContent: 'flex-start', mb: 2 }}
+                                        style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}
                                     >
                                         <Box sx={{
                                             display: 'flex',
