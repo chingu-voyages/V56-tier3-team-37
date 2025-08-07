@@ -17,6 +17,7 @@ import {
   Avatar
 } from '@mui/material';
 import { Person, Person2 } from '@mui/icons-material';
+import Image from 'next/image';
 
 interface TeamMember {
   name: string;
@@ -24,14 +25,15 @@ interface TeamMember {
   linkedin?: string;
   role: 'Developer' | 'UI/UX Designer' | 'Scrum Master' | 'Product Owner';
   gender: 'male' | 'female';
+  imageName: string;
 }
 
 const teamMembers: TeamMember[] = [
-  { name: 'Cristian Torres', github: 'https://github.com/cristiantorresf19191919', role: 'Developer', gender: 'male' },
-  { name: 'Vincent Bui', github: 'https://github.com/VincentBui0', linkedin: 'https://www.linkedin.com/in/vincent-bui0', role: 'Developer', gender: 'male' },
-  { name: 'Jessica Hackett', github: 'https://github.com/mooglemoxie0018', linkedin: 'https://www.linkedin.com/in/jessica-hackett/', role: 'UI/UX Designer', gender: 'female' },
-  { name: 'Ruth Igwe-Oruta', github: 'https://github.com/Xondacc', linkedin: 'https://www.linkedin.com/in/ruthigwe-oruta/', role: 'Product Owner', gender: 'female' },
-  { name: 'Dorene St.Marthe', github: 'https://github.com/Dorene-StMarthe/', linkedin: 'https://www.linkedin.com/in/dorenestmarthe/', role: 'Scrum Master', gender: 'female' },
+  { name: 'Cristian Torres', github: 'https://github.com/cristiantorresf19191919', role: 'Developer', gender: 'male', imageName: 'Cristian.jpeg' },
+  { name: 'Vincent Bui', github: 'https://github.com/VincentBui0', linkedin: 'https://www.linkedin.com/in/vincent-bui0', role: 'Developer', gender: 'male', imageName: 'vincent.jpeg' },
+  { name: 'Jessica Hackett', github: 'https://github.com/mooglemoxie0018', linkedin: 'https://www.linkedin.com/in/jessica-hackett/', role: 'UI/UX Designer', gender: 'female', imageName: 'Jessica.jpeg' },
+  { name: 'Ruth Igwe-Oruta', github: 'https://github.com/Xondacc', linkedin: 'https://www.linkedin.com/in/ruthigwe-oruta/', role: 'Product Owner', gender: 'female', imageName: 'Ruth.jpeg' },
+  { name: 'Dorene St.Marthe', github: 'https://github.com/Dorene-StMarthe/', linkedin: 'https://www.linkedin.com/in/dorenestmarthe/', role: 'Scrum Master', gender: 'female', imageName: 'Dorene.jpeg' },
 ];
 
 const roleColors = {
@@ -160,46 +162,68 @@ export default function Footer() {
                       <ListItem
                         key={member.name}
                         sx={{
-                          py: { xs: 1.5, sm: 2 },
-                          px: { xs: 1.5, sm: 2 },
-                          mb: 1,
-                          borderRadius: 2,
+                          py: { xs: 2, sm: 2.5 },
+                          px: { xs: 2, sm: 3 },
+                          mb: 1.5,
+                          borderRadius: 3,
                           backgroundColor: '#f8fafc',
                           border: '1px solid #e5e7eb',
                           '&:hover': {
                             backgroundColor: '#f1f5f9',
                             border: '1px solid #d1d5db',
-                            transform: 'translateY(-1px)',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                            transition: 'all 0.2s ease'
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            transition: 'all 0.3s ease'
                           },
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.3s ease'
                         }}
                       >
                         <ListItemText
                           primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
-                              <Avatar
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 2.5 } }}>
+                              {/* Profile Image */}
+                              <Box
                                 sx={{
-                                  width: { xs: 28, sm: 32 },
-                                  height: { xs: 28, sm: 32 },
-                                  backgroundColor: '#14b8a6',
-                                  color: 'white',
-                                  fontWeight: 600,
-                                  fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                                  position: 'relative',
+                                  width: { xs: 60, sm: 70 },
+                                  height: { xs: 60, sm: 70 },
+                                  borderRadius: '50%',
+                                  overflow: 'hidden',
+                                  border: '3px solid #ffffff',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                  '&:hover': {
+                                    transform: 'scale(1.05)',
+                                    boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
+                                    transition: 'all 0.3s ease'
+                                  },
+                                  transition: 'all 0.3s ease'
                                 }}
                               >
-                                {member.gender === 'male' ? (
-                                  <Person sx={{ fontSize: { xs: 18, sm: 20 } }} />
-                                ) : (
-                                  <Person2 sx={{ fontSize: { xs: 18, sm: 20 } }} />
-                                )}
-                              </Avatar>
-                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                <Typography variant="body1" sx={{ fontWeight: 600, color: '#1f2937' }}>
+                                <Image
+                                  src={`/images/${member.imageName}`}
+                                  alt={`${member.name} profile picture`}
+                                  fill
+                                  style={{
+                                    objectFit: 'cover',
+                                    objectPosition: 'center'
+                                  }}
+                                  sizes="(max-width: 600px) 60px, 70px"
+                                />
+                              </Box>
+
+                              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
+                                <Typography
+                                  variant="h6"
+                                  sx={{
+                                    fontWeight: 700,
+                                    color: '#1f2937',
+                                    fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                                    lineHeight: 1.2
+                                  }}
+                                >
                                   {member.name}
                                 </Typography>
-                                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
                                   <Link
                                     href={member.github}
                                     target="_blank"
@@ -208,19 +232,23 @@ export default function Footer() {
                                       color: '#ffffff',
                                       textDecoration: 'none',
                                       backgroundColor: '#14b8a6',
-                                      padding: { xs: '3px 8px', sm: '4px 10px' },
-                                      borderRadius: '12px',
-                                      fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                      padding: { xs: '6px 12px', sm: '8px 16px' },
+                                      borderRadius: '20px',
+                                      fontSize: { xs: '0.8rem', sm: '0.85rem' },
                                       fontWeight: 600,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 0.5,
                                       '&:hover': {
                                         backgroundColor: '#0d9488',
                                         textDecoration: 'none',
                                         transform: 'translateY(-1px)',
-                                        boxShadow: '0 1px 4px rgba(20, 184, 166, 0.3)'
+                                        boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)'
                                       },
                                       transition: 'all 0.2s ease'
                                     }}
                                   >
+                                    <GitHub sx={{ fontSize: { xs: 16, sm: 18 } }} />
                                     GitHub
                                   </Link>
                                   {member.linkedin && (
@@ -236,15 +264,18 @@ export default function Footer() {
                                           color: '#ffffff',
                                           textDecoration: 'none',
                                           backgroundColor: '#0077b5',
-                                          padding: { xs: '3px 8px', sm: '4px 10px' },
-                                          borderRadius: '12px',
-                                          fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                          padding: { xs: '6px 12px', sm: '8px 16px' },
+                                          borderRadius: '20px',
+                                          fontSize: { xs: '0.8rem', sm: '0.85rem' },
                                           fontWeight: 600,
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: 0.5,
                                           '&:hover': {
                                             backgroundColor: '#005885',
                                             textDecoration: 'none',
                                             transform: 'translateY(-1px)',
-                                            boxShadow: '0 1px 4px rgba(0, 119, 181, 0.3)'
+                                            boxShadow: '0 2px 8px rgba(0, 119, 181, 0.3)'
                                           },
                                           transition: 'all 0.2s ease'
                                         }}
@@ -263,7 +294,7 @@ export default function Footer() {
 
                     {/* Divider between roles (except after last role) */}
                     {roleIndex < Object.keys(groupedMembers).length - 1 && (
-                      <Divider sx={{ my: 2, opacity: 0.3, borderColor: '#e5e7eb' }} />
+                      <Divider sx={{ my: 3, opacity: 0.3, borderColor: '#e5e7eb' }} />
                     )}
                   </Box>
                 ))}
@@ -271,18 +302,19 @@ export default function Footer() {
 
               {/* Footer note */}
               <Box sx={{
-                mt: 2,
-                pt: 2,
+                mt: 3,
+                pt: 3,
                 borderTop: '1px solid #e5e7eb',
                 backgroundColor: '#f8fafc',
-                borderRadius: 2,
-                p: 2
+                borderRadius: 3,
+                p: 3
               }}>
                 <Typography variant="body1" sx={{
                   color: '#6b7280',
                   textAlign: 'center',
                   fontStyle: 'italic',
-                  fontWeight: 500
+                  fontWeight: 500,
+                  fontSize: { xs: '0.95rem', sm: '1rem' }
                 }}>
                   Reducing stress through real-time surgery updates and workflow transparency.
                 </Typography>
