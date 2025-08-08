@@ -8,17 +8,5 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Handle API routes
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/___netlify-handler"
-  status = 200
-
-# Handle all other routes
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/___netlify-handler"
-  status = 200
-
 [context.deploy-preview]
   skip = true
