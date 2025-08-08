@@ -1,35 +1,16 @@
-# Netlify Deployment Guide
+# Deployment Guide - Care Flow
 
-## Configuration Issues Fixed
+## 🚀 Netlify Deployment
 
-### 1. Publish Directory
-**❌ Wrong**: `.next`  
-**✅ Correct**: `out`
+This application is configured for deployment on Netlify with server-side rendering support for API routes.
 
-The `.next` directory is for development. Netlify needs the static export directory.
+### Configuration Files
 
-### 2. Next.js Configuration
-Added to `next.config.ts`:
-```typescript
-const nextConfig: NextConfig = {
-  output: 'export',
-  trailingSlash: true,
-  images: {
-    unoptimized: true
-  },
-  eslint: {
-    ignoreDuringBuilds: true
-  }
-};
-```
-
-### 3. Netlify Configuration
-Updated `netlify.toml`:
+#### `netlify.toml`
 ```toml
 [build]
   command = "npm run build"
-  publish = "out"
-  base = "."
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
@@ -37,72 +18,102 @@ Updated `netlify.toml`:
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# Handle API routes
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/___netlify-handler"
+  status = 200
+
+# Handle all other routes
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/___netlify-handler"
   status = 200
 ```
 
-## Environment Variables Setup
+### Environment Variables
 
-In your Netlify dashboard, add these environment variables:
+Make sure to set these environment variables in your Netlify dashboard:
 
-### Required Firebase Variables
+#### Required Variables
+- `GEMINI_API_KEY` - Your Gemini Pro API key
+- `NEXT_PUBLIC_FIREBASE_API_KEY` - Firebase API key
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` - Firebase auth domain
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID` - Firebase project ID
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` - Firebase storage bucket
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` - Firebase messaging sender ID
+- `NEXT_PUBLIC_FIREBASE_APP_ID` - Firebase app ID
+- `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` - Firebase measurement ID
+
+### Deployment Steps
+
+1. **Connect Repository**: Connect your GitHub repository to Netlify
+2. **Set Environment Variables**: Add all required environment variables in Netlify dashboard
+3. **Deploy**: Netlify will automatically build and deploy using the configuration in `netlify.toml`
+
+### Build Process
+
+1. **Install Dependencies**: `npm install`
+2. **Build Application**: `npm run build`
+3. **Publish**: Netlify serves from `.next` directory
+4. **API Routes**: Handled by Netlify Functions via the Next.js plugin
+
+### Features Supported
+
+✅ **Static Pages**: Home, auth, status pages  
+✅ **Dynamic Pages**: Patient management pages  
+✅ **API Routes**: `/api/chat` with Gemini Pro integration  
+✅ **Server-Side Rendering**: Full SSR support  
+✅ **Environment Variables**: Secure configuration  
+
+### Troubleshooting
+
+#### Build Errors
+- Ensure all environment variables are set
+- Check Node.js version (18+ required)
+- Verify API keys are valid
+
+#### API Route Issues
+- Ensure `GEMINI_API_KEY` is set correctly
+- Check Netlify Functions logs for errors
+- Verify the Next.js plugin is installed
+
+#### Performance
+- Static pages are pre-rendered for optimal performance
+- API routes are serverless functions
+- Images are optimized automatically
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBoN20mks1zHWbPeh9k6reAXSmejwmKQ78
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=careflow-72c2a.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=careflow-72c2a
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=careflow-72c2a.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=960916398964
-NEXT_PUBLIC_FIREBASE_APP_ID=1:960916398964:web:f66b89c0574b1bbf214221
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-Z4DTS7J9JJ
-```
 
-### Additional Variables
-```
-NODE_ENV=production
-```
+### Production Features
 
-## Deployment Settings
+- **AI Chat**: Fully functional Gemini Pro integration
+- **Authentication**: Firebase auth with role-based access
+- **Patient Management**: Complete CRUD operations
+- **Real-time Updates**: Firebase real-time listeners
+- **Responsive Design**: Mobile-first approach
+- **Accessibility**: WCAG compliant
 
-### Build Settings
-- **Build command**: `npm run build` ✅
-- **Publish directory**: `out` ✅
-- **Base directory**: Leave empty (or `.` if needed)
+### Security
 
-### Branch Settings
-- **Branch to deploy**: `main` ✅
-- **Auto-deploy**: Enabled ✅
+- Environment variables are encrypted
+- API keys are server-side only
+- Firebase security rules enforced
+- Role-based access control
+- Input validation and sanitization
 
-## Important Notes
-
-1. **Static Export**: Your app will be exported as static files
-2. **Client-Side Only**: Firebase will work client-side
-3. **No Server Functions**: All functionality runs in the browser
-4. **Environment Variables**: Must be prefixed with `NEXT_PUBLIC_` for client access
-
-## Testing Deployment
-
-1. **Local Build Test**: ✅ `npm run build` works successfully
-2. Push to `main` branch
-3. Netlify will auto-deploy
-4. Check build logs for any errors
-5. Test authentication and role-based features
-
-## Build Status
-- ✅ **Build Command**: `npm run build` 
-- ✅ **Publish Directory**: `out`
-- ✅ **Static Export**: Working correctly
-- ✅ **ESLint**: Temporarily disabled for deployment
-- ✅ **All Pages**: Successfully exported
-
-## Troubleshooting
-
-### Common Issues
-- **Build fails**: Check Node.js version (use 18)
-- **Firebase errors**: Verify environment variables are set
-- **404 errors**: Check redirects configuration
-- **Authentication issues**: Ensure Firebase project is configured correctly
-
-### Build Logs
-Monitor the build process in Netlify dashboard for any errors during deployment. 
+This configuration ensures your Care Flow application deploys successfully with full functionality including the AI chat feature powered by Gemini Pro. 

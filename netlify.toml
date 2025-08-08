@@ -1,20 +1,24 @@
 [build]
-  command = "npm install --force --ignore-scripts && npm run build"
-  publish = "out"
-  base = "."
+  command = "npm run build"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
-  PYTHON = "/usr/bin/python3"
-  npm_config_python = "/usr/bin/python3"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# Handle API routes
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/___netlify-handler"
+  status = 200
+
+# Handle all other routes
 [[redirects]]
   from = "/*"
-  to = "/index.html"
-  status = 200 
+  to = "/.netlify/functions/___netlify-handler"
+  status = 200
 
 [context.deploy-preview]
   skip = true
