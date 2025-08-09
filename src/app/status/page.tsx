@@ -1,17 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context';
 import { patientService, Patient } from '@/lib/patient-service';
+import { UserRole } from '@/lib/user-roles';
+import { motion } from 'framer-motion';
 import {
     Box,
     Typography,
     Card,
     CardContent,
     Chip,
-    CircularProgress,
     Alert,
     Container
 } from '@mui/material';
+import BrandLoader from '@/components/BrandLoader';
 import {
     Person as PersonIcon,
     Schedule as ScheduleIcon,
@@ -21,11 +24,13 @@ import {
 } from '@mui/icons-material';
 
 export default function StatusPage() {
+    const { user, userRole, loading: authLoading } = useAuth();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
+        // Always fetch patients regardless of authentication status
         fetchPatients();
     }, []);
 
@@ -76,38 +81,20 @@ export default function StatusPage() {
         return new Date(dateString).toLocaleDateString();
     };
 
-    if (loading) {
-        return (
-            <Box sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '50vh',
-                p: 4
-            }}>
-                <CircularProgress
-                    size={60}
-                    sx={{
-                        color: '#07BEB8',
-                        mb: 2
-                    }}
-                />
-                <Typography
-                    variant="h6"
-                    color="text.secondary"
-                    sx={{ fontFamily: 'var(--font-roboto), Roboto, sans-serif' }}
-                >
-                    Loading patient status...
-                </Typography>
-            </Box>
-        );
+    // Check user role using the enum
+    const isAuthenticated = userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM;
+    const isGuest = userRole === UserRole.GUEST;
+
+    // Debug logging
+    console.log('Auth Debug:', { user: user?.email, userRole, isAuthenticated, isGuest });
+
+    if (loading || authLoading) {
+        return <BrandLoader message="Loading patient status..." />;
     }
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{
-                background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
                 minHeight: '100vh',
                 p: 4,
                 borderRadius: 3
@@ -143,6 +130,20 @@ export default function StatusPage() {
                     >
                         Real-time updates on surgery progress and patient status
                     </Typography>
+                    {isGuest && (
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                                fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                fontSize: '0.9rem',
+                                mt: 1,
+                                fontStyle: 'italic'
+                            }}
+                        >
+                            Public view - showing limited information for privacy
+                        </Typography>
+                    )}
                 </Box>
 
                 {error && (
@@ -199,8 +200,23 @@ export default function StatusPage() {
                     </Card>
                 ) : (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                        {patients.map((patient) => (
-                            <Box sx={{ flex: '1 1 350px', minWidth: 0 }} key={patient.id}>
+                        {patients.map((patient, index) => (
+                            <motion.div
+                                key={patient.id}
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{
+                                    duration: 0.5,
+                                    delay: index * 0.1,
+                                    ease: [0.25, 0.46, 0.45, 0.94]
+                                }}
+                                whileHover={{
+                                    y: -8,
+                                    scale: 1.02,
+                                    transition: { duration: 0.2 }
+                                }}
+                                style={{ flex: '1 1 350px', minWidth: 0 }}
+                            >
                                 <Card sx={{
                                     height: '100%',
                                     borderRadius: 3,
@@ -214,7 +230,7 @@ export default function StatusPage() {
                                 }}>
                                     <CardContent sx={{ p: 3 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                            {getStatusIcon(patient.status)}
+                                            {getStatusIcon(patient.status || 'scheduled')}
                                             <Typography
                                                 variant="h6"
                                                 component="h2"
@@ -225,25 +241,15 @@ export default function StatusPage() {
                                                     fontFamily: 'var(--font-roboto), Roboto, sans-serif'
                                                 }}
                                             >
-                                                {patient.name}
+                                                {isGuest ? `Patient ${patient.patientId || 'Loading...'}` : patient.name}
                                             </Typography>
                                         </Box>
 
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{
-                                                mb: 2,
-                                                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
-                                            }}
-                                        >
-                                            {patient.surgeryType}
-                                        </Typography>
-
+                                        {/* Only show status for guests - no other information */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             <Chip
-                                                label={patient.status.replace('-', ' ')}
-                                                color={getStatusColor(patient.status)}
+                                                label={(patient.status || 'scheduled').replace('-', ' ')}
+                                                color={getStatusColor(patient.status || 'scheduled')}
                                                 size="small"
                                                 sx={{
                                                     textTransform: 'capitalize',
@@ -270,19 +276,37 @@ export default function StatusPage() {
                                             />
                                         </Box>
 
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{
-                                                fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                                                fontSize: '0.875rem'
-                                            }}
-                                        >
-                                            Surgery Date: {formatDate(patient.surgeryDate)}
-                                        </Typography>
+                                        {/* Only show additional info for authenticated users */}
+                                        {isAuthenticated && (
+                                            <>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
+                                                    sx={{
+                                                        mb: 2,
+                                                        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                                                    }}
+                                                >
+                                                    {patient.surgeryType}
+                                                </Typography>
+
+                                                {patient.surgeryDate && (
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                        sx={{
+                                                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                                            fontSize: '0.875rem'
+                                                        }}
+                                                    >
+                                                        Surgery Date: {formatDate(patient.surgeryDate)}
+                                                    </Typography>
+                                                )}
+                                            </>
+                                        )}
                                     </CardContent>
                                 </Card>
-                            </Box>
+                            </motion.div>
                         ))}
                     </Box>
                 )}

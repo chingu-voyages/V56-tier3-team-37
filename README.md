@@ -486,11 +486,10 @@ This project was built as part of Chingu Voyage, a collaborative learning experi
 ### Team Members
 - **Cristian Torres** - [GitHub](https://github.com/cristiantorresf19191919)
 - **Ruth Igwe-Oruta** - [GitHub](https://github.com/Xondacc) / [LinkedIn](https://www.linkedin.com/in/ruthigwe-oruta)
-- **Syed Affan** - [GitHub](https://github.com/affan880) / [LinkedIn](https://linkedin.com/in/syed-affan)
 - **Jessica Hackett** - [GitHub](https://github.com/mooglemoxie0018) / [LinkedIn](https://www.linkedin.com/in/jessica-hackett/)
 - **Vincent Bui** - [GitHub](https://github.com/VincentBui0) / [LinkedIn](https://www.linkedin.com/in/vincent-bui0/)
 - **Dorene St.Marthe** - [GitHub](https://github.com/Dorene-StMarthe) / [LinkedIn](https://www.linkedin.com/in/dorenestmarthe/)
-- **Brian Stasiukaitis** - [GitHub](https://github.com/BrianStas) / [LinkedIn](https://www.linkedin.com/in/brian-stasiukaitis/)
+
 
 ### Project Goals
 - Demonstrate modern React/Next.js development practices

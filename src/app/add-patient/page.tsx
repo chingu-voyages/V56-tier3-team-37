@@ -5,6 +5,9 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { patientService, CreatePatientData } from '@/lib/patient-service';
+import { UserRole } from '@/lib/user-roles';
+import { v4 as uuidv4 } from 'uuid';
+import { motion } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -12,47 +15,26 @@ import {
   Card,
   CardContent,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
   CircularProgress,
   Breadcrumbs
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import RoleGuard from '@/components/RoleGuard';
+import BrandButton from '@/components/BrandButton';
+import BrandLoader from '@/components/BrandLoader';
+import InlineLoader from '@/components/InlineLoader';
 
-function generatePatientId() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let id = '';
-  for (let i = 0; i < 6; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return id;
-}
+// Patient number generation is now handled automatically by the patient service
 
 export default function AddPatientPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-<<<<<<< Updated upstream
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState<CreatePatientData>({
-    name: '',
-    email: '',
-    phone: '',
-    dateOfBirth: '',
-    surgeryType: '',
-    surgeryDate: '',
-    status: 'scheduled',
-    notes: ''
-  });
-=======
-
-  const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     dob: '',
@@ -60,12 +42,10 @@ export default function AddPatientPage() {
     healthCareInsurance: '',
     email: '',
     phone: '',
+    patientId: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
->>>>>>> Stashed changes
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -73,34 +53,67 @@ export default function AddPatientPage() {
     }
   }, [user, authLoading, router]);
 
-<<<<<<< Updated upstream
-  const handleInputChange = (field: keyof CreatePatientData) => (
-    e: React.ChangeEvent<HTMLInputElement | { value: unknown }>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-=======
   // Client-side validation
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.firstName.trim()) newErrors.firstName = 'First Name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last Name is required';
-    if (!formData.dob.trim()) newErrors.dob = 'Date of Birth is required';
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
-    if (!formData.healthCareInsurance.trim()) newErrors.healthCareInsurance = 'Health Care Insurance is required';
 
-    if (formData.email) {
-      // Basic email regex
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        newErrors.email = 'Invalid email address';
-      }
-    } else {
-      newErrors.email = 'Email is required';
+    // First Name validation
+    if (!formData.firstName?.trim()) {
+      newErrors.firstName = 'First Name is required';
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = 'First Name must be at least 2 characters';
     }
 
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    // Last Name validation
+    if (!formData.lastName?.trim()) {
+      newErrors.lastName = 'Last Name is required';
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = 'Last Name must be at least 2 characters';
+    }
+
+    // Date of Birth validation
+    if (!formData.dob?.trim()) {
+      newErrors.dob = 'Date of Birth is required';
+    } else {
+      const dobDate = new Date(formData.dob);
+      const today = new Date();
+      if (dobDate > today) {
+        newErrors.dob = 'Date of Birth cannot be in the future';
+      }
+    }
+
+    // Address validation
+    if (!formData.address?.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (formData.address.trim().length < 5) {
+      newErrors.address = 'Address must be at least 5 characters';
+    }
+
+    // Health Care Insurance validation
+    if (!formData.healthCareInsurance?.trim()) {
+      newErrors.healthCareInsurance = 'Health Care Insurance is required';
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+    }
+
+    // Phone validation
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      const cleanPhone = formData.phone.replace(/[\s\-\(\)]/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        newErrors.phone = 'Please enter a valid phone number';
+      }
+    }
 
     return newErrors;
   };
@@ -110,48 +123,47 @@ export default function AddPatientPage() {
     setFormData(prev => ({
       ...prev,
       [name]: value,
->>>>>>> Stashed changes
     }));
+
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< Updated upstream
+
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    setErrors({});
     setLoading(true);
     setError('');
     setSuccess(false);
 
     try {
-      // Basic validation
-      if (!formData.name.trim()) {
-        throw new Error('Name is required');
-      }
-      if (!formData.email.trim()) {
-        throw new Error('Email is required');
-      }
-      if (!formData.phone.trim()) {
-        throw new Error('Phone is required');
-      }
-      if (!formData.surgeryType.trim()) {
-        throw new Error('Surgery type is required');
-      }
-      if (!formData.surgeryDate) {
-        throw new Error('Surgery date is required');
-      }
+      // Patient number will be generated automatically by the service
+      await patientService.addPatient({
+        ...formData,
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        dateOfBirth: formData.dob,
+      });
 
-      await patientService.addPatient(formData);
       setSuccess(true);
 
       // Reset form
       setFormData({
-        name: '',
+        firstName: '',
+        lastName: '',
+        dob: '',
+        address: '',
+        healthCareInsurance: '',
         email: '',
         phone: '',
-        dateOfBirth: '',
-        surgeryType: '',
-        surgeryDate: '',
-        status: 'scheduled',
-        notes: ''
+        patientId: '',
       });
 
       // Redirect after a short delay
@@ -163,47 +175,6 @@ export default function AddPatientPage() {
       setError(err.message || 'Failed to add patient');
     } finally {
       setLoading(false);
-=======
-
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
-    setIsSubmitting(true);
-    setMessage('');
-
-    try {
-      const patientId = generatePatientId();
-      const response = await fetch('/api/patients', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ ...formData, patientId }),
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Failed to add patient');
-      }
-
-      setMessage('Patient added successfully!');
-      setFormData({
-        firstName: '',
-        lastName: '',
-        dob: '',
-        address: '',
-        healthCareInsurance: '',
-        email: '',
-        phone: '',
-      });
-    } catch (error: any) {
-      setMessage(error.message || 'Something went wrong.');
-    } finally {
-      setIsSubmitting(false);
->>>>>>> Stashed changes
     }
   };
 
@@ -220,8 +191,8 @@ export default function AddPatientPage() {
   }
 
   return (
-<<<<<<< Updated upstream
-    <RoleGuard requiredRole="admin">
+    <RoleGuard requiredRole={UserRole.ADMIN}>
+      {loading && <BrandLoader fullScreen message="Saving patient..." />}
       <Box sx={{ p: 3 }}>
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link href="/patients" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -259,291 +230,286 @@ export default function AddPatientPage() {
         <Card>
           <CardContent>
             <form onSubmit={handleSubmit}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Full Name"
-                    value={formData.name}
-                    onChange={handleInputChange('name')}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange('email')}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Phone Number"
-                    value={formData.phone}
-                    onChange={handleInputChange('phone')}
-                    required
-                    disabled={loading}
-                  />
-                </Box>
-
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Date of Birth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange('dateOfBirth')}
-                    InputLabelProps={{ shrink: true }}
-                    disabled={loading}
-                  />
-                </Box>
-
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Surgery Type"
-                    value={formData.surgeryType}
-                    onChange={handleInputChange('surgeryType')}
-                    required
-                    disabled={loading}
-                    placeholder="e.g., Appendectomy, Heart Surgery"
-                  />
-                </Box>
-
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <TextField
-                    fullWidth
-                    label="Surgery Date"
-                    type="date"
-                    value={formData.surgeryDate}
-                    onChange={handleInputChange('surgeryDate')}
-                    required
-                    disabled={loading}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Box>
-
-                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                  <FormControl fullWidth disabled={loading}>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      value={formData.status}
-                      label="Status"
-                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                    >
-                      <MenuItem value="scheduled">Scheduled</MenuItem>
-                      <MenuItem value="in-progress">In Progress</MenuItem>
-                      <MenuItem value="completed">Completed</MenuItem>
-                      <MenuItem value="cancelled">Cancelled</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                <Box sx={{ flex: '1 1 100%' }}>
-                  <TextField
-                    fullWidth
-                    label="Notes"
-                    multiline
-                    rows={4}
-                    value={formData.notes}
-                    onChange={handleInputChange('notes')}
-                    disabled={loading}
-                    placeholder="Additional notes about the patient or surgery..."
-                  />
-                </Box>
-
-                <Box sx={{ flex: '1 1 100%' }}>
-                  <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <Button
-                      variant="outlined"
-                      component={Link}
-                      href="/patients"
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                  {/* First Name */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    style={{ flex: '1 1 300px', minWidth: 0 }}
+                  >
+                    <TextField
+                      fullWidth
+                      label="First Name"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      error={!!errors.firstName}
+                      helperText={errors.firstName}
+                      required
                       disabled={loading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
+                    />
+                  </motion.div>
+
+                  {/* Last Name */}
+                  <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                    <TextField
+                      fullWidth
+                      label="Last Name"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      error={!!errors.lastName}
+                      helperText={errors.lastName}
+                      required
                       disabled={loading}
-                    >
-                      {loading ? 'Saving...' : 'Save Patient'}
-                    </Button>
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Date of Birth */}
+                  <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                    <TextField
+                      fullWidth
+                      label="Date of Birth"
+                      type="date"
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleChange}
+                      error={!!errors.dob}
+                      helperText={errors.dob}
+                      required
+                      disabled={loading}
+                      InputLabelProps={{ shrink: true }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Phone Number */}
+                  <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                    <TextField
+                      fullWidth
+                      label="Phone Number"
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      error={!!errors.phone}
+                      helperText={errors.phone}
+                      required
+                      disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Address */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <TextField
+                      fullWidth
+                      label="Address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      error={!!errors.address}
+                      helperText={errors.address}
+                      required
+                      disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Health Care Insurance */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <TextField
+                      fullWidth
+                      label="Health Care Insurance"
+                      name="healthCareInsurance"
+                      value={formData.healthCareInsurance}
+                      onChange={handleChange}
+                      error={!!errors.healthCareInsurance}
+                      helperText={errors.healthCareInsurance}
+                      required
+                      disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Email */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <TextField
+                      fullWidth
+                      label="Email Address"
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      error={!!errors.email}
+                      helperText={errors.email}
+                      required
+                      disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Submit Buttons */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                      <Button
+                        component={Link}
+                        href="/patients"
+                        disabled={loading}
+                        sx={{
+                          borderRadius: '50px',
+                          px: 4,
+                          py: 1,
+                          minHeight: 40,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#07BEB8',
+                          color: 'white',
+                          fontWeight: 700,
+                          fontSize: '1rem',
+                          textTransform: 'none',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          letterSpacing: '0.5px',
+                          textAlign: 'center',
+                          boxShadow: '0 4px 12px rgba(7, 190, 184, 0.3)',
+                          '&:hover': {
+                            background: '#059B96',
+                            boxShadow: '0 6px 20px rgba(7, 190, 184, 0.4)',
+                            transform: 'translateY(-1px)'
+                          },
+                          '&:focus': {
+                            boxShadow: '0 0 0 3px rgba(7, 190, 184, 0.2), 0 4px 12px rgba(7, 190, 184, 0.3)'
+                          },
+                          '&:active': {
+                            transform: 'translateY(0px)',
+                            boxShadow: '0 2px 8px rgba(7, 190, 184, 0.3)'
+                          },
+                          '&:disabled': {
+                            background: '#9CA3AF',
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            boxShadow: '0 2px 8px rgba(156, 163, 175, 0.2)',
+                            transform: 'none'
+                          },
+                          transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <BrandButton
+                        type="submit"
+                        startIcon={loading ? <InlineLoader size={20} /> : <SaveIcon />}
+                        disabled={loading}
+                      >
+                        {loading ? 'Saving...' : 'Save Patient'}
+                      </BrandButton>
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
+              </motion.div>
             </form>
           </CardContent>
         </Card>
       </Box>
     </RoleGuard>
-=======
-    <div className="container">
-      <div className="py-8 max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">Add New Patient</h1>
-          <Link href="/patients" className="form__button form__button--outline">
-            Back to Patients
-          </Link>
-        </div>
-
-        {message && (
-          <div
-            className={`alert ${
-              message.includes('successfully') ? 'alert--success' : 'alert--error'
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="form">
-          <div className="grid grid-cols-2 gap-4">
-            {/* First Name */}
-            <div className="form__group">
-              <label className="form__label" htmlFor="firstName">
-                First Name *
-              </label>
-              <input
-                id="firstName"
-                type="text"
-                name="firstName"
-                className={`form__input ${errors.firstName ? 'border-red-500' : ''}`}
-                value={formData.firstName}
-                onChange={handleChange}
-                required
-              />
-              {errors.firstName && <p className="text-red-600 text-sm">{errors.firstName}</p>}
-            </div>
-
-            {/* Last Name */}
-            <div className="form__group">
-              <label className="form__label" htmlFor="lastName">
-                Last Name *
-              </label>
-              <input
-                id="lastName"
-                type="text"
-                name="lastName"
-                className={`form__input ${errors.lastName ? 'border-red-500' : ''}`}
-                value={formData.lastName}
-                onChange={handleChange}
-                required
-              />
-              {errors.lastName && <p className="text-red-600 text-sm">{errors.lastName}</p>}
-            </div>
-
-            {/* DOB */}
-            <div className="form__group">
-              <label className="form__label" htmlFor="dob">
-                Date of Birth *
-              </label>
-              <input
-                id="dob"
-                type="date"
-                name="dob"
-                className={`form__input ${errors.dob ? 'border-red-500' : ''}`}
-                value={formData.dob}
-                onChange={handleChange}
-                required
-              />
-              {errors.dob && <p className="text-red-600 text-sm">{errors.dob}</p>}
-            </div>
-
-            {/* Phone */}
-            <div className="form__group">
-              <label className="form__label" htmlFor="phone">
-                Phone Number *
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                name="phone"
-                className={`form__input ${errors.phone ? 'border-red-500' : ''}`}
-                value={formData.phone}
-                onChange={handleChange}
-                required
-              />
-              {errors.phone && <p className="text-red-600 text-sm">{errors.phone}</p>}
-            </div>
-
-            {/* Address */}
-            <div className="form__group col-span-2">
-              <label className="form__label" htmlFor="address">
-                Address *
-              </label>
-              <input
-                id="address"
-                type="text"
-                name="address"
-                className={`form__input ${errors.address ? 'border-red-500' : ''}`}
-                value={formData.address}
-                onChange={handleChange}
-                required
-              />
-              {errors.address && <p className="text-red-600 text-sm">{errors.address}</p>}
-            </div>
-
-            {/* Health Care Insurance */}
-            <div className="form__group col-span-2">
-              <label className="form__label" htmlFor="healthCareInsurance">
-                Health Care Insurance *
-              </label>
-              <input
-                id="healthCareInsurance"
-                type="text"
-                name="healthCareInsurance"
-                className={`form__input ${errors.healthCareInsurance ? 'border-red-500' : ''}`}
-                value={formData.healthCareInsurance}
-                onChange={handleChange}
-                required
-              />
-              {errors.healthCareInsurance && (
-                <p className="text-red-600 text-sm">{errors.healthCareInsurance}</p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div className="form__group col-span-2">
-              <label className="form__label" htmlFor="email">
-                Email Address *
-              </label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                className={`form__input ${errors.email ? 'border-red-500' : ''}`}
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-              {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
-            </div>
-          </div>
-
-          <div className="form__group mt-6">
-            <button
-              type="submit"
-              className={`form__button form__button--primary form__button--wide ${
-                isSubmitting ? 'form__button--loading' : ''
-              }`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Adding Patient...' : 'Add Patient'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
->>>>>>> Stashed changes
   );
 }

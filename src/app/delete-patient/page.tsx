@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
 import { patientService, Patient } from '@/lib/patient-service';
+import { UserRole } from '@/lib/user-roles';
 import {
   Box,
   Typography,
@@ -28,7 +29,8 @@ import {
   Person as PersonIcon
 } from '@mui/icons-material';
 
-export default function DeletePatientPage() {
+// Component that uses useSearchParams
+function DeletePatientContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,12 +67,12 @@ export default function DeletePatientPage() {
       setError('');
       const patients = await patientService.getPatients();
       const foundPatient = patients.find(p => p.id === patientId);
-      
+
       if (!foundPatient) {
         setError('Patient not found');
         return;
       }
-      
+
       setPatient(foundPatient);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch patient details');
@@ -97,7 +99,7 @@ export default function DeletePatientPage() {
 
     try {
       await patientService.deletePatient(patient.id);
-      
+
       // Show success and redirect
       router.push('/patients');
     } catch (err: any) {
@@ -144,10 +146,9 @@ export default function DeletePatientPage() {
   }
 
   return (
-    <RoleGuard requiredRole="surgical-team">
+    <RoleGuard requiredRole={UserRole.SURGICAL_TEAM}>
       <Box sx={{
         p: 4,
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
         minHeight: '100vh'
       }}>
         {/* Page Header */}
@@ -326,8 +327,8 @@ export default function DeletePatientPage() {
                 Warning: This action cannot be undone
               </Typography>
               <Typography>
-                Deleting this patient will permanently remove all their information from the system, 
-                including medical records, surgery details, and historical data. Please ensure this 
+                Deleting this patient will permanently remove all their information from the system,
+                including medical records, surgery details, and historical data. Please ensure this
                 is the correct patient before proceeding.
               </Typography>
             </Alert>
@@ -402,14 +403,14 @@ export default function DeletePatientPage() {
                       Surgery Type: {patient.surgeryType}
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
-                      Surgery Date: {formatDate(patient.surgeryDate)}
+                      Surgery Date: {formatDate(patient.surgeryDate!)}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
                         Status:
                       </Typography>
                       <Chip
-                        label={patient.status.replace('-', ' ')}
+                        label={patient.status!.replace('-', ' ')}
                         color={getStatusColor(patient.status)}
                         size="small"
                         sx={{
@@ -551,7 +552,7 @@ export default function DeletePatientPage() {
             <Typography variant="body1" sx={{ mb: 2 }}>
               Are you absolutely sure you want to delete this patient?
             </Typography>
-            
+
             <Box sx={{
               p: 2,
               backgroundColor: 'rgba(239, 68, 68, 0.05)',
@@ -568,7 +569,7 @@ export default function DeletePatientPage() {
             </Box>
 
             <Typography variant="body2" color="text.secondary">
-              This action will permanently delete all patient data including medical records, 
+              This action will permanently delete all patient data including medical records,
               surgery information, and historical data. This cannot be undone.
             </Typography>
           </DialogContent>
@@ -607,5 +608,23 @@ export default function DeletePatientPage() {
         </Dialog>
       </Box>
     </RoleGuard>
+  );
+}
+
+// Loading fallback component
+function DeletePatientLoading() {
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <CircularProgress />
+    </Box>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function DeletePatientPage() {
+  return (
+    <Suspense fallback={<DeletePatientLoading />}>
+      <DeletePatientContent />
+    </Suspense>
   );
 }

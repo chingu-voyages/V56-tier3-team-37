@@ -25,7 +25,7 @@ interface RoleGuardProps {
 
 export default function RoleGuard({
     children,
-    requiredRole = 'guest',
+    requiredRole = UserRole.GUEST,
     fallback
 }: RoleGuardProps) {
     const { user, userRole, loading } = useAuth();
@@ -33,13 +33,13 @@ export default function RoleGuard({
 
     // Check if user has the required role
     const hasAccess = () => {
-        if (requiredRole === 'guest') return true;
+        if (requiredRole === UserRole.GUEST) return true;
         if (!user) return false;
 
         const roleHierarchy: Record<UserRole, number> = {
-            'guest': 0,
-            'surgical-team': 1,
-            'admin': 2
+            [UserRole.GUEST]: 0,
+            [UserRole.SURGICAL_TEAM]: 1,
+            [UserRole.ADMIN]: 2
         };
 
         return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
@@ -82,7 +82,7 @@ export default function RoleGuard({
                         p: 4,
                         textAlign: 'center',
                         borderRadius: 3,
-                        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)'
+
                     }}
                 >
                     <SecurityIcon

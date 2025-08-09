@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
 import { patientService, Patient, CreatePatientData } from '@/lib/patient-service';
+import { UserRole } from '@/lib/user-roles';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Typography,
@@ -31,19 +33,24 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Tooltip
 } from '@mui/material';
-import { 
-  Add as AddIcon, 
-  Refresh as RefreshIcon, 
-  Edit as EditIcon, 
-  Close as CloseIcon, 
+import BrandButton from '@/components/BrandButton';
+import BrandLoader from '@/components/BrandLoader';
+import InlineLoader from '@/components/InlineLoader';
+import {
+  Add as AddIcon,
+  Refresh as RefreshIcon,
+  Edit as EditIcon,
+  Close as CloseIcon,
   Delete as DeleteIcon,
-  Search as SearchIcon, 
-  FilterList as FilterIcon 
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Update as UpdateIcon
 } from '@mui/icons-material';
 
-export default function PatientsPage() {
+function PatientsPageContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,28 +59,35 @@ export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastNameSearch, setLastNameSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [surgeryTypeFilter, setSurgeryTypeFilter] = useState<string>('all');
-  
+
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
   const [editSuccess, setEditSuccess] = useState(false);
-  
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [generatingNumbers, setGeneratingNumbers] = useState(false);
+
   const [editFormData, setEditFormData] = useState<CreatePatientData>({
-    name: '',
+    firstName: '',
+    lastName: '',
+    dob: '',
+    address: '',
+    healthCareInsurance: '',
     email: '',
     phone: '',
-    dateOfBirth: '',
+    patientNumber: '',
     surgeryType: '',
     surgeryDate: '',
     status: 'scheduled',
-    notes: ''
+    notes: '',
   });
 
   useEffect(() => {
@@ -100,19 +114,26 @@ export default function PatientsPage() {
 
   // Add this filtered patients computation
   const filteredPatients = patients.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.phone.includes(searchTerm) ||
-                         patient.surgeryType.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const fullName = patient.name || `${patient.firstName || ''} ${patient.lastName || ''}`.trim();
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.phone.includes(searchTerm) ||
+      (patient.patientId && patient.patientId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (patient.surgeryType && patient.surgeryType.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    // Last name specific search
+    const patientLastName = patient.lastName || (patient.name ? patient.name.split(' ').pop() : '');
+    const matchesLastNameSearch = !lastNameSearch ||
+      (patientLastName && patientLastName.toLowerCase().includes(lastNameSearch.toLowerCase()));
+
     const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
     const matchesSurgeryType = surgeryTypeFilter === 'all' || patient.surgeryType === surgeryTypeFilter;
-    
-    return matchesSearch && matchesStatus && matchesSurgeryType;
+
+    return matchesSearch && matchesLastNameSearch && matchesStatus && matchesSurgeryType;
   });
 
   // Get unique surgery types for filter dropdown
-  const uniqueSurgeryTypes = [...new Set(patients.map(p => p.surgeryType))];
+  const uniqueSurgeryTypes = [...new Set(patients.map(p => p.surgeryType).filter(Boolean))];
 
   const fetchPatients = async () => {
     try {
@@ -127,17 +148,37 @@ export default function PatientsPage() {
     }
   };
 
+  const generatePatientNumbersForExisting = async () => {
+    try {
+      setGeneratingNumbers(true);
+      setError('');
+      await patientService.generatePatientNumbersForExistingPatients();
+      await fetchPatients(); // Refresh the list
+      setShowDeletedAlert(true); // Show success message
+      // Reset the alert after 3 seconds
+      setTimeout(() => setShowDeletedAlert(false), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate patient numbers');
+    } finally {
+      setGeneratingNumbers(false);
+    }
+  };
+
   const handleEditPatient = (patient: Patient) => {
     setEditingPatient(patient);
     setEditFormData({
-      name: patient.name || '',
+      firstName: patient.firstName || '',
+      lastName: patient.lastName || '',
+      dob: patient.dob || patient.dateOfBirth || '',
+      address: patient.address || '',
+      healthCareInsurance: patient.healthCareInsurance || '',
       email: patient.email || '',
       phone: patient.phone || '',
-      dateOfBirth: patient.dateOfBirth || '',
+      patientNumber: patient.patientId || '',
       surgeryType: patient.surgeryType || '',
       surgeryDate: patient.surgeryDate || '',
       status: patient.status || 'scheduled',
-      notes: patient.notes || ''
+      notes: patient.notes || '',
     });
     setEditError('');
     setEditSuccess(false);
@@ -149,6 +190,77 @@ export default function PatientsPage() {
     setEditingPatient(null);
     setEditError('');
     setEditSuccess(false);
+    setEditErrors({});
+  };
+
+  // Client-side validation for edit modal
+  const validateEditForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // First Name validation
+    if (!editFormData.firstName?.trim()) {
+      newErrors.firstName = 'First Name is required';
+    } else if (editFormData.firstName.trim().length < 2) {
+      newErrors.firstName = 'First Name must be at least 2 characters';
+    }
+
+    // Last Name validation
+    if (!editFormData.lastName?.trim()) {
+      newErrors.lastName = 'Last Name is required';
+    } else if (editFormData.lastName.trim().length < 2) {
+      newErrors.lastName = 'Last Name must be at least 2 characters';
+    }
+
+    // Email validation
+    if (!editFormData.email?.trim()) {
+      newErrors.email = 'Email is required';
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editFormData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+    }
+
+    // Phone validation
+    if (!editFormData.phone?.trim()) {
+      newErrors.phone = 'Phone is required';
+    } else {
+      const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      const cleanPhone = editFormData.phone.replace(/[\s\-\(\)]/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        newErrors.phone = 'Please enter a valid phone number';
+      }
+    }
+
+    // Date of Birth validation
+    if (!editFormData.dob?.trim()) {
+      newErrors.dob = 'Date of Birth is required';
+    } else {
+      const dobDate = new Date(editFormData.dob);
+      const today = new Date();
+      if (dobDate > today) {
+        newErrors.dob = 'Date of Birth cannot be in the future';
+      }
+    }
+
+    // Address validation
+    if (!editFormData.address?.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (editFormData.address.trim().length < 5) {
+      newErrors.address = 'Address must be at least 5 characters';
+    }
+
+    // Health Care Insurance validation
+    if (!editFormData.healthCareInsurance?.trim()) {
+      newErrors.healthCareInsurance = 'Health Care Insurance is required';
+    }
+
+    // Surgery Type validation
+    if (!editFormData.surgeryType?.trim()) {
+      newErrors.surgeryType = 'Surgery Type is required';
+    }
+
+    return newErrors;
   };
 
   const handleEditInputChange = (field: keyof CreatePatientData) => (
@@ -158,29 +270,41 @@ export default function PatientsPage() {
       ...prev,
       [field]: e.target.value
     }));
+
+    // Clear error for this field when user starts typing
+    if (editErrors[field]) {
+      setEditErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const handleUpdatePatient = async () => {
     if (!editingPatient?.id) return;
 
+    // Validate form
+    const validationErrors = validateEditForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setEditErrors(validationErrors);
+      return;
+    }
+
+    setEditErrors({});
     setEditLoading(true);
     setEditError('');
     setEditSuccess(false);
 
     try {
-      // Basic validation
-      if (!editFormData.name.trim()) throw new Error('Name is required');
-      if (!editFormData.email.trim()) throw new Error('Email is required');
-      if (!editFormData.phone.trim()) throw new Error('Phone is required');
-      if (!editFormData.surgeryType.trim()) throw new Error('Surgery type is required');
-      if (!editFormData.surgeryDate) throw new Error('Surgery date is required');
-
-      await patientService.updatePatient(editingPatient.id, editFormData);
+      await patientService.updatePatient(editingPatient.id, {
+        ...editFormData,
+        // Generate a full name from firstName and lastName for backward compatibility
+        name: `${editFormData.firstName} ${editFormData.lastName}`.trim(),
+        // Map dob to dateOfBirth for backward compatibility
+        dateOfBirth: editFormData.dob,
+      });
       setEditSuccess(true);
-      
+
       // Refresh the patients list
       await fetchPatients();
-      
+
       // Close modal after short delay
       setTimeout(() => {
         handleCloseEditModal();
@@ -213,11 +337,7 @@ export default function PatientsPage() {
   };
 
   if (authLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <BrandLoader message="Loading..." />;
   }
 
   if (!user) {
@@ -225,10 +345,9 @@ export default function PatientsPage() {
   }
 
   return (
-    <RoleGuard requiredRole="surgical-team">
+    <RoleGuard requiredRole={UserRole.SURGICAL_TEAM}>
       <Box sx={{
         p: 4,
-        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
         minHeight: '100vh'
       }}>
         {/* Page Header */}
@@ -266,48 +385,26 @@ export default function PatientsPage() {
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="outlined"
+              <BrandButton
                 startIcon={<RefreshIcon />}
                 onClick={fetchPatients}
                 disabled={loading}
                 sx={{
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1.5,
-                  borderColor: '#07BEB8',
-                  color: '#07BEB8',
+                  background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
                   '&:hover': {
-                    borderColor: '#059B96',
-                    backgroundColor: 'rgba(7, 190, 184, 0.05)',
-                    transform: 'translateY(-1px)'
-                  },
-                  transition: 'all 0.3s ease'
+                    background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)'
+                  }
                 }}
               >
                 Refresh
-              </Button>
-              <Button
-                variant="contained"
+              </BrandButton>
+              <BrandButton
                 startIcon={<AddIcon />}
                 component={Link}
                 href="/add-patient"
-                sx={{
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1.5,
-                  background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
-                  boxShadow: '0 4px 15px rgba(7, 190, 184, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)',
-                    boxShadow: '0 6px 20px rgba(7, 190, 184, 0.4)',
-                    transform: 'translateY(-2px)'
-                  },
-                  transition: 'all 0.3s ease'
-                }}
               >
                 Add Patient
-              </Button>
+              </BrandButton>
             </Box>
           </Box>
         </Box>
@@ -324,7 +421,7 @@ export default function PatientsPage() {
               }
             }}
           >
-            Patient deleted successfully!
+            Operation completed successfully!
           </Alert>
         )}
 
@@ -345,31 +442,7 @@ export default function PatientsPage() {
         )}
 
         {loading ? (
-          <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            p: 8,
-            background: 'white',
-            borderRadius: 3,
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
-          }}>
-            <CircularProgress
-              size={60}
-              sx={{
-                color: '#07BEB8',
-                mb: 2
-              }}
-            />
-            <Typography
-              variant="h6"
-              color="text.secondary"
-              sx={{ fontFamily: 'var(--font-roboto), Roboto, sans-serif' }}
-            >
-              Loading patients...
-            </Typography>
-          </Box>
+          <BrandLoader message="Loading patients..." />
         ) : patients.length === 0 ? (
           <Card sx={{
             borderRadius: 3,
@@ -418,32 +491,18 @@ export default function PatientsPage() {
               >
                 Start by adding your first patient to the system. You'll be able to track their surgery status and provide real-time updates.
               </Typography>
-              <Button
-                variant="contained"
+              <BrandButton
                 startIcon={<AddIcon />}
                 component={Link}
                 href="/add-patient"
-                sx={{
-                  borderRadius: 2,
-                  px: 4,
-                  py: 1.5,
-                  background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
-                  boxShadow: '0 4px 15px rgba(7, 190, 184, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)',
-                    boxShadow: '0 6px 20px rgba(7, 190, 184, 0.4)',
-                    transform: 'translateY(-2px)'
-                  },
-                  transition: 'all 0.3s ease'
-                }}
               >
                 Add First Patient
-              </Button>
+              </BrandButton>
             </CardContent>
           </Card>
         ) : (
           <>
-            {/* Search and Filter Section */}
+            {/* Last Name Search Section for Status Updates */}
             <Box sx={{
               background: 'white',
               borderRadius: 3,
@@ -453,9 +512,66 @@ export default function PatientsPage() {
               border: '1px solid rgba(7, 190, 184, 0.1)'
             }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1F2937' }}>
-                Search & Filter Patients
+                Search in Patient Status Update
               </Typography>
-              
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Quickly locate patients to update their surgery status
+              </Typography>
+
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                <TextField
+                  label="Last Name"
+                  placeholder="Enter last name to search..."
+                  value={lastNameSearch}
+                  onChange={(e) => setLastNameSearch(e.target.value)}
+                  sx={{ flex: '1 1 300px', minWidth: 0 }}
+                  size="small"
+                />
+
+                <BrandButton
+                  startIcon={<SearchIcon />}
+                  onClick={() => {
+                    // Search is already active via onChange, this button provides visual feedback
+                  }}
+                >
+                  Search
+                </BrandButton>
+
+                <BrandButton
+                  onClick={() => {
+                    setLastNameSearch('');
+                  }}
+                  sx={{
+                    background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)'
+                    }
+                  }}
+                >
+                  Clear
+                </BrandButton>
+              </Box>
+
+              {lastNameSearch && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Searching for last name: "{lastNameSearch}" - Found {filteredPatients.length} patients
+                </Typography>
+              )}
+            </Box>
+
+            {/* Advanced Search and Filter Section */}
+            <Box sx={{
+              background: 'white',
+              borderRadius: 3,
+              p: 3,
+              mb: 4,
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(7, 190, 184, 0.1)'
+            }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1F2937' }}>
+                Advanced Search & Filters
+              </Typography>
+
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <TextField
                   placeholder="Search by name, email, phone, or surgery type..."
@@ -467,7 +583,7 @@ export default function PatientsPage() {
                   sx={{ flex: '1 1 300px', minWidth: 0 }}
                   size="small"
                 />
-                
+
                 <FormControl sx={{ minWidth: 150 }} size="small">
                   <InputLabel>Status</InputLabel>
                   <Select
@@ -482,7 +598,7 @@ export default function PatientsPage() {
                     <MenuItem value="cancelled">Cancelled</MenuItem>
                   </Select>
                 </FormControl>
-                
+
                 <FormControl sx={{ minWidth: 180 }} size="small">
                   <InputLabel>Surgery Type</InputLabel>
                   <Select
@@ -496,11 +612,12 @@ export default function PatientsPage() {
                     ))}
                   </Select>
                 </FormControl>
-                
+
                 <Button
                   variant="outlined"
                   onClick={() => {
                     setSearchTerm('');
+                    setLastNameSearch('');
                     setStatusFilter('all');
                     setSurgeryTypeFilter('all');
                   }}
@@ -508,8 +625,25 @@ export default function PatientsPage() {
                 >
                   Clear Filters
                 </Button>
+                <Button
+                  variant="contained"
+                  onClick={generatePatientNumbersForExisting}
+                  disabled={generatingNumbers}
+                  startIcon={generatingNumbers ? <InlineLoader size={16} /> : <UpdateIcon />}
+                  sx={{
+                    background: 'linear-gradient(135deg, #07BEB8 0%, #059669 100%)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                    },
+                    '&:disabled': {
+                      background: '#9CA3AF'
+                    }
+                  }}
+                >
+                  {generatingNumbers ? 'Generating...' : 'Generate Patient Numbers'}
+                </Button>
               </Box>
-              
+
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                 Showing {filteredPatients.length} of {patients.length} patients
               </Typography>
@@ -535,14 +669,14 @@ export default function PatientsPage() {
                       }}>
                         Name
                       </TableCell>
-                       <TableCell sx={{
-                        fontWeight: 600, 
-                        color: '#1F2937', 
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif', 
-                        fontSize: '0.95rem', 
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)' 
-                        }}>
-                          Patient ID
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        color: '#1F2937',
+                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                        fontSize: '0.95rem',
+                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                      }}>
+                        Patient Number
                       </TableCell>
                       <TableCell sx={{
                         fontWeight: 600,
@@ -611,133 +745,163 @@ export default function PatientsPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredPatients.map((patient, index) => (
-                      <TableRow
-                        key={patient.id}
-                        hover
-                        sx={{
-                          backgroundColor: index % 2 === 0 ? 'white' : 'rgba(7, 190, 184, 0.02)',
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
+                    <AnimatePresence>
+                      {filteredPatients.map((patient, index) => (
+                        <motion.tr
+                          key={patient.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{
+                            duration: 0.3,
+                            delay: index * 0.05,
+                            ease: [0.25, 0.46, 0.45, 0.94]
+                          }}
+                          whileHover={{
                             backgroundColor: 'rgba(7, 190, 184, 0.05)',
-                            transform: 'scale(1.001)'
-                          }
-                        }}
-                      >
-                        <TableCell sx={{
-                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                          fontWeight: 500
-                        }}>
-                          <Typography variant="body2" fontWeight="600" color="#1F2937">
-                            {patient.name}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{
-                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                          color: '#6B7280'
-                        }}>
-                          {patient.id}
-                        </TableCell>
-                        <TableCell sx={{
-                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                          color: '#6B7280'
-                        }}>
-                          {patient.email}
-                        </TableCell>
-                        <TableCell sx={{
-                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                          color: '#6B7280'
-                        }}>
-                          {patient.phone}
-                        </TableCell>
-                        <TableCell sx={{
-                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                          fontWeight: 500
-                        }}>
-                          {patient.surgeryType}
-                        </TableCell>
-                        <TableCell sx={{
-                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                          color: '#6B7280'
-                        }}>
-                          {formatDate(patient.surgeryDate)}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={patient.status.replace('-', ' ')}
-                            color={getStatusColor(patient.status)}
-                            size="small"
-                            sx={{
-                              textTransform: 'capitalize',
-                              fontWeight: 600,
-                              borderRadius: 1.5,
-                              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                              '&.MuiChip-colorPrimary': {
-                                backgroundColor: '#07BEB8',
-                                color: 'white'
-                              },
-                              '&.MuiChip-colorWarning': {
-                                backgroundColor: '#F59E0B',
-                                color: 'white'
-                              },
-                              '&.MuiChip-colorSuccess': {
-                                backgroundColor: '#10B981',
-                                color: 'white'
-                              },
-                              '&.MuiChip-colorError': {
-                                backgroundColor: '#EF4444',
-                                color: 'white'
-                              }
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell sx={{
-                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                          color: '#6B7280',
-                          fontSize: '0.875rem'
-                        }}>
-                          {patient.createdAt instanceof Date
-                            ? formatDate(patient.createdAt.toDate().toISOString())
-                            : formatDate(patient.createdAt.toDate().toISOString())
-                          }
-                        </TableCell>
-                        <TableCell sx={{ textAlign: 'center' }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                            <IconButton
-                              onClick={() => handleEditPatient(patient)}
-                              disabled={!patient.id}
+                            scale: 1.001,
+                            transition: { duration: 0.2 }
+                          }}
+                          style={{
+                            backgroundColor: index % 2 === 0 ? 'white' : 'rgba(7, 190, 184, 0.02)'
+                          }}
+                        >
+                          <TableCell sx={{
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            fontWeight: 500
+                          }}>
+                            <Typography variant="body2" fontWeight="600" color="#1F2937">
+                              {patient.name}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            color: '#6B7280',
+                            fontWeight: 500
+                          }}>
+                            {patient.patientId || 'N/A'}
+                          </TableCell>
+                          <TableCell sx={{
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            color: '#6B7280'
+                          }}>
+                            {patient.email}
+                          </TableCell>
+                          <TableCell sx={{
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            color: '#6B7280'
+                          }}>
+                            {patient.phone}
+                          </TableCell>
+                          <TableCell sx={{
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            fontWeight: 500
+                          }}>
+                            {patient.surgeryType || 'N/A'}
+                          </TableCell>
+                          <TableCell sx={{
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            color: '#6B7280'
+                          }}>
+                            {patient.surgeryDate ? formatDate(patient.surgeryDate) : 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={(patient.status || 'scheduled').replace('-', ' ')}
+                              color={getStatusColor(patient.status || 'scheduled')}
+                              size="small"
                               sx={{
-                                color: '#07BEB8',
-                                '&:hover': {
-                                  backgroundColor: 'rgba(7, 190, 184, 0.1)',
-                                  transform: 'scale(1.1)'
+                                textTransform: 'capitalize',
+                                fontWeight: 600,
+                                borderRadius: 1.5,
+                                fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                '&.MuiChip-colorPrimary': {
+                                  backgroundColor: '#07BEB8',
+                                  color: 'white'
                                 },
-                                transition: 'all 0.3s ease'
-                              }}
-                              aria-label={`Edit ${patient.name}`}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                            <IconButton
-                              component={Link}
-                              href={`/delete-patient?id=${patient.id}`}
-                              disabled={!patient.id}
-                              sx={{
-                                color: '#EF4444',
-                                '&:hover': {
-                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                  transform: 'scale(1.1)'
+                                '&.MuiChip-colorWarning': {
+                                  backgroundColor: '#F59E0B',
+                                  color: 'white'
                                 },
-                                transition: 'all 0.3s ease'
+                                '&.MuiChip-colorSuccess': {
+                                  backgroundColor: '#10B981',
+                                  color: 'white'
+                                },
+                                '&.MuiChip-colorError': {
+                                  backgroundColor: '#EF4444',
+                                  color: 'white'
+                                }
                               }}
-                              aria-label={`Delete ${patient.name}`}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            />
+                          </TableCell>
+                          <TableCell sx={{
+                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                            color: '#6B7280',
+                            fontSize: '0.875rem'
+                          }}>
+                            {patient.createdAt instanceof Date
+                              ? formatDate(patient.createdAt.toDate().toISOString())
+                              : formatDate(patient.createdAt.toDate().toISOString())
+                            }
+                          </TableCell>
+                          <TableCell sx={{ textAlign: 'center' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                              <Tooltip title="Update Patient Status" arrow>
+                                <IconButton
+                                  onClick={() => handleEditPatient(patient)}
+                                  disabled={!patient.id}
+                                  sx={{
+                                    color: '#07BEB8',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(7, 190, 184, 0.1)',
+                                      transform: 'scale(1.1)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                  aria-label={`Update status for ${patient.name}`}
+                                >
+                                  <UpdateIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Edit Patient Details" arrow>
+                                <IconButton
+                                  component={Link}
+                                  href={`/edit-patient/${patient.id}`}
+                                  disabled={!patient.id}
+                                  sx={{
+                                    color: '#059669',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                      transform: 'scale(1.1)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                  aria-label={`Edit details for ${patient.name}`}
+                                >
+                                  <EditIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <IconButton
+                                component={Link}
+                                href={`/delete-patient?id=${patient.id}`}
+                                disabled={!patient.id}
+                                sx={{
+                                  color: '#EF4444',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    transform: 'scale(1.1)'
+                                  },
+                                  transition: 'all 0.3s ease'
+                                }}
+                                aria-label={`Delete ${patient.name}`}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Box>
+                          </TableCell>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -754,179 +918,379 @@ export default function PatientsPage() {
           PaperProps={{
             sx: {
               borderRadius: 3,
-              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
+              border: '1px solid rgba(7, 190, 184, 0.1)'
             }
           }}
         >
           <DialogTitle sx={{
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center',
-            pb: 2,
+            alignItems: 'flex-start',
+            pb: 3,
+            px: 3,
+            pt: 3,
             borderBottom: '1px solid rgba(7, 190, 184, 0.1)'
           }}>
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#1F2937' }}>
-                Edit Patient
+              <Typography variant="h5" sx={{
+                fontWeight: 700,
+                color: '#1F2937',
+                mb: 1,
+                fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+              }}>
+                Update Patient Status
               </Typography>
               {editingPatient && (
-                <Typography variant="subtitle2" color="text.secondary">
-                  Patient ID: {editingPatient.id}
+                <Typography variant="body2" sx={{
+                  color: '#6B7280',
+                  fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                }}>
+                  Patient: {editingPatient.name} (ID: {editingPatient.patientId || editingPatient.id})
                 </Typography>
               )}
             </Box>
-            <IconButton onClick={handleCloseEditModal} disabled={editLoading}>
+            <IconButton
+              onClick={handleCloseEditModal}
+              disabled={editLoading}
+              sx={{
+                color: '#6B7280',
+                '&:hover': {
+                  backgroundColor: 'rgba(107, 114, 128, 0.1)'
+                }
+              }}
+            >
               <CloseIcon />
             </IconButton>
           </DialogTitle>
 
-          <DialogContent sx={{ pt: 3 }}>
+          <DialogContent sx={{ pt: 3, px: 3 }}>
             {editError && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
                 {editError}
               </Alert>
             )}
             {editSuccess && (
-              <Alert severity="success" sx={{ mb: 3 }}>
+              <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
                 Patient updated successfully! Closing modal...
               </Alert>
             )}
 
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                <TextField
-                  fullWidth
-                  label="Full Name"
-                  value={editFormData.name}
-                  onChange={handleEditInputChange('name')}
-                  required
-                  disabled={editLoading}
-                  size="small"
-                />
-              </Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 3 }}>
+              <TextField
+                fullWidth
+                label="First Name *"
+                value={editFormData.firstName}
+                onChange={handleEditInputChange('firstName')}
+                error={!!editErrors.firstName}
+                helperText={editErrors.firstName}
+                required
+                disabled={editLoading}
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: editErrors.firstName ? '#EF4444' : '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: editErrors.firstName ? '#EF4444' : '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: editErrors.firstName ? '#EF4444' : '#07BEB8'
+                    }
+                  }
+                }}
+              />
 
-              <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  value={editFormData.email}
-                  onChange={handleEditInputChange('email')}
-                  required
-                  disabled={editLoading}
-                  size="small"
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Last Name *"
+                value={editFormData.lastName}
+                onChange={handleEditInputChange('lastName')}
+                error={!!editErrors.lastName}
+                helperText={editErrors.lastName}
+                required
+                disabled={editLoading}
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: editErrors.lastName ? '#EF4444' : '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: editErrors.lastName ? '#EF4444' : '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: editErrors.lastName ? '#EF4444' : '#07BEB8'
+                    }
+                  }
+                }}
+              />
 
-              <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                <TextField
-                  fullWidth
-                  label="Phone Number"
-                  value={editFormData.phone}
-                  onChange={handleEditInputChange('phone')}
-                  required
-                  disabled={editLoading}
-                  size="small"
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Email *"
+                type="email"
+                value={editFormData.email}
+                onChange={handleEditInputChange('email')}
+                error={!!editErrors.email}
+                helperText={editErrors.email}
+                required
+                disabled={editLoading}
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: editErrors.email ? '#EF4444' : '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: editErrors.email ? '#EF4444' : '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: editErrors.email ? '#EF4444' : '#07BEB8'
+                    }
+                  }
+                }}
+              />
 
-              <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                <TextField
-                  fullWidth
-                  label="Date of Birth"
-                  type="date"
-                  value={editFormData.dateOfBirth}
-                  onChange={handleEditInputChange('dateOfBirth')}
-                  InputLabelProps={{ shrink: true }}
-                  disabled={editLoading}
-                  size="small"
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Phone Number *"
+                value={editFormData.phone}
+                onChange={handleEditInputChange('phone')}
+                error={!!editErrors.phone}
+                helperText={editErrors.phone}
+                required
+                disabled={editLoading}
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: editErrors.phone ? '#EF4444' : '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: editErrors.phone ? '#EF4444' : '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: editErrors.phone ? '#EF4444' : '#07BEB8'
+                    }
+                  }
+                }}
+              />
 
-              <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                <TextField
-                  fullWidth
-                  label="Surgery Type"
-                  value={editFormData.surgeryType}
-                  onChange={handleEditInputChange('surgeryType')}
-                  required
-                  disabled={editLoading}
-                  placeholder="e.g., Appendectomy, Heart Surgery"
-                  size="small"
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Date of Birth"
+                type="date"
+                value={editFormData.dob}
+                onChange={handleEditInputChange('dob')}
+                error={!!editErrors.dob}
+                helperText={editErrors.dob}
+                InputLabelProps={{ shrink: true }}
+                disabled={editLoading}
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: editErrors.dob ? '#EF4444' : '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: editErrors.dob ? '#EF4444' : '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: editErrors.dob ? '#EF4444' : '#07BEB8'
+                    }
+                  }
+                }}
+              />
 
-              <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                <TextField
-                  fullWidth
-                  label="Surgery Date"
-                  type="date"
-                  value={editFormData.surgeryDate}
-                  onChange={handleEditInputChange('surgeryDate')}
-                  required
-                  disabled={editLoading}
-                  InputLabelProps={{ shrink: true }}
-                  size="small"
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Surgery Type *"
+                value={editFormData.surgeryType}
+                onChange={handleEditInputChange('surgeryType')}
+                error={!!editErrors.surgeryType}
+                helperText={editErrors.surgeryType}
+                required
+                disabled={editLoading}
+                size="small"
+                placeholder="e.g., Cardiac Surgery, Orthopedic Surgery, etc."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: editErrors.surgeryType ? '#EF4444' : '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: editErrors.surgeryType ? '#EF4444' : '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: editErrors.surgeryType ? '#EF4444' : '#07BEB8'
+                    }
+                  }
+                }}
+              />
 
-              <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                <FormControl fullWidth disabled={editLoading} size="small">
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={editFormData.status}
-                    label="Status"
-                    onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value as any }))}
-                  >
-                    <MenuItem value="scheduled">Scheduled</MenuItem>
-                    <MenuItem value="in-progress">In Progress</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
+              <TextField
+                fullWidth
+                label="Surgery Date"
+                type="date"
+                value={editFormData.surgeryDate}
+                onChange={handleEditInputChange('surgeryDate')}
+                InputLabelProps={{ shrink: true }}
+                disabled={editLoading}
+                size="small"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#07BEB8'
+                    }
+                  }
+                }}
+              />
 
-              <Box sx={{ flex: '1 1 100%' }}>
-                <TextField
-                  fullWidth
-                  label="Notes"
-                  multiline
-                  rows={3}
-                  value={editFormData.notes}
-                  onChange={handleEditInputChange('notes')}
-                  disabled={editLoading}
-                  placeholder="Additional notes about the patient or surgery..."
-                  size="small"
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Address *"
+                value={editFormData.address}
+                onChange={handleEditInputChange('address')}
+                error={!!editErrors.address}
+                helperText={editErrors.address}
+                required
+                disabled={editLoading}
+                size="small"
+                sx={{
+                  gridColumn: '1 / -1',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: editErrors.address ? '#EF4444' : '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: editErrors.address ? '#EF4444' : '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: editErrors.address ? '#EF4444' : '#07BEB8'
+                    }
+                  }
+                }}
+              />
+
+              <TextField
+                fullWidth
+                label="Health Care Insurance *"
+                value={editFormData.healthCareInsurance}
+                onChange={handleEditInputChange('healthCareInsurance')}
+                error={!!editErrors.healthCareInsurance}
+                helperText={editErrors.healthCareInsurance}
+                required
+                disabled={editLoading}
+                size="small"
+                sx={{
+                  gridColumn: '1 / -1',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: editErrors.healthCareInsurance ? '#EF4444' : '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: editErrors.healthCareInsurance ? '#EF4444' : '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: editErrors.healthCareInsurance ? '#EF4444' : '#07BEB8'
+                    }
+                  }
+                }}
+              />
+
+              <FormControl fullWidth disabled={editLoading} size="small">
+                <InputLabel sx={{
+                  fontWeight: 600,
+                  color: '#1F2937',
+                  fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                }}>
+                  Status *
+                </InputLabel>
+                <Select
+                  value={editFormData.status}
+                  label="Status *"
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                  sx={{
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#E5E7EB',
+                      borderWidth: 1
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#07BEB8'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#07BEB8'
+                    }
+                  }}
+                >
+                  <MenuItem value="scheduled">Scheduled</MenuItem>
+                  <MenuItem value="in-progress">In Progress</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="cancelled">Cancelled</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                fullWidth
+                label="Notes"
+                multiline
+                rows={3}
+                value={editFormData.notes}
+                onChange={handleEditInputChange('notes')}
+                disabled={editLoading}
+                placeholder="Additional notes about the patient or surgery..."
+                size="small"
+                sx={{
+                  gridColumn: '1 / -1',
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: '#E5E7EB'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#07BEB8'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#07BEB8'
+                    }
+                  }
+                }}
+              />
             </Box>
           </DialogContent>
 
-          <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid rgba(7, 190, 184, 0.1)' }}>
-            <Button
+          <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid rgba(7, 190, 184, 0.1)', gap: 2, display: 'flex', justifyContent: 'center' }}>
+            <BrandButton
               onClick={handleCloseEditModal}
               disabled={editLoading}
-              variant="outlined"
-              sx={{ borderColor: '#6B7280', color: '#6B7280' }}
             >
               Cancel
-            </Button>
-            <Button
+            </BrandButton>
+            <BrandButton
               onClick={handleUpdatePatient}
               disabled={editLoading}
-              variant="contained"
-              sx={{
-                background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)'
-                }
-              }}
+              startIcon={editLoading ? <InlineLoader size={20} /> : undefined}
             >
-              {editLoading ? <CircularProgress size={20} color="inherit" /> : 'Update Patient'}
-            </Button>
+              {editLoading ? 'Updating...' : 'Update'}
+            </BrandButton>
           </DialogActions>
         </Dialog>
       </Box>
     </RoleGuard>
+  );
+}
+
+export default function PatientsPage() {
+  return (
+    <Suspense fallback={<BrandLoader message="Loading..." />}>
+      <PatientsPageContent />
+    </Suspense>
   );
 }
