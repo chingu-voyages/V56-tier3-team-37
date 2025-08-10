@@ -403,7 +403,7 @@ await patientService.addPatient(patientData);
 const patients = await patientService.getPatients();
 
 // Get patients by status
-const scheduledPatients = await patientService.getPatientsByStatus('scheduled');
+const checkedInPatients = await patientService.getPatientsByStatus('checked-in');
 
 // Update patient
 await patientService.updatePatient(id, updates);
@@ -460,6 +460,15 @@ useEffect(() => {
 - Tailwind CSS utilities
 - Responsive design
 - Form validation
+
+### Patient Status Workflow
+- **Checked In**: Default status when patient information is recorded
+- **Pre-Procedure**: Patient is prepared for surgery
+- **In Progress**: Surgery is currently being performed
+- **Closing**: Surgery is being completed
+- **Recovery**: Patient is in post-operative recovery
+- **Complete**: Surgery and recovery are finished
+- **Dismissal**: Patient is discharged from care
 
 ## 📱 Pages Overview
 

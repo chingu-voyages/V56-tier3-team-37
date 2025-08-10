@@ -86,7 +86,7 @@ function PatientsPageContent() {
     patientNumber: '',
     surgeryType: '',
     surgeryDate: '',
-    status: 'scheduled',
+    status: 'checked-in',
     notes: '',
   });
 
@@ -177,7 +177,7 @@ function PatientsPageContent() {
       patientNumber: patient.patientId || '',
       surgeryType: patient.surgeryType || '',
       surgeryDate: patient.surgeryDate || '',
-      status: patient.status || 'scheduled',
+      status: patient.status || 'checked-in',
       notes: patient.notes || '',
     });
     setEditError('');
@@ -319,13 +319,19 @@ function PatientsPageContent() {
 
   const getStatusColor = (status: Patient['status']) => {
     switch (status) {
-      case 'scheduled':
+      case 'checked-in':
         return 'primary';
+      case 'pre-procedure':
+        return 'warning';
       case 'in-progress':
         return 'warning';
-      case 'completed':
+      case 'closing':
+        return 'warning';
+      case 'recovery':
+        return 'warning';
+      case 'complete':
         return 'success';
-      case 'cancelled':
+      case 'dismissal':
         return 'error';
       default:
         return 'default';
@@ -592,10 +598,13 @@ function PatientsPageContent() {
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
                     <MenuItem value="all">All Statuses</MenuItem>
-                    <MenuItem value="scheduled">Scheduled</MenuItem>
+                    <MenuItem value="checked-in">Checked In</MenuItem>
+                    <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
                     <MenuItem value="in-progress">In Progress</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
+                    <MenuItem value="closing">Closing</MenuItem>
+                    <MenuItem value="recovery">Recovery</MenuItem>
+                    <MenuItem value="complete">Complete</MenuItem>
+                    <MenuItem value="dismissal">Dismissal</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -807,8 +816,8 @@ function PatientsPageContent() {
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={(patient.status || 'scheduled').replace('-', ' ')}
-                              color={getStatusColor(patient.status || 'scheduled')}
+                              label={(patient.status || 'checked-in').replace('-', ' ')}
+                              color={getStatusColor(patient.status || 'checked-in')}
                               size="small"
                               sx={{
                                 textTransform: 'capitalize',
@@ -1231,10 +1240,13 @@ function PatientsPageContent() {
                     }
                   }}
                 >
-                  <MenuItem value="scheduled">Scheduled</MenuItem>
+                  <MenuItem value="checked-in">Checked In</MenuItem>
+                  <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
                   <MenuItem value="in-progress">In Progress</MenuItem>
-                  <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="cancelled">Cancelled</MenuItem>
+                  <MenuItem value="closing">Closing</MenuItem>
+                  <MenuItem value="recovery">Recovery</MenuItem>
+                  <MenuItem value="complete">Complete</MenuItem>
+                  <MenuItem value="dismissal">Dismissal</MenuItem>
                 </Select>
               </FormControl>
 

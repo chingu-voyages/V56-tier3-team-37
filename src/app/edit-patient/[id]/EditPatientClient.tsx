@@ -44,16 +44,21 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [patient, setPatient] = useState<Patient | null>(null);
 
-    const [formData, setFormData] = useState<CreatePatientData>({
-        name: '',
+    const initialFormData: CreatePatientData = {
+        firstName: '',
+        lastName: '',
+        dob: '',
+        address: '',
+        healthCareInsurance: '',
         email: '',
         phone: '',
-        dateOfBirth: '',
         surgeryType: '',
         surgeryDate: '',
-        status: 'scheduled',
-        notes: ''
-    });
+        status: 'checked-in',
+        notes: '',
+    };
+
+    const [formData, setFormData] = useState<CreatePatientData>(initialFormData);
 
     useEffect(() => {
         const getParams = async () => {
@@ -92,13 +97,16 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
 
             // Populate form with existing data
             setFormData({
-                name: foundPatient.name || '',
+                firstName: foundPatient.firstName || foundPatient.name?.split(' ')[0] || '',
+                lastName: foundPatient.lastName || foundPatient.name?.split(' ').slice(1).join(' ') || '',
+                dob: foundPatient.dob || foundPatient.dateOfBirth || '',
+                address: foundPatient.address || '',
+                healthCareInsurance: foundPatient.healthCareInsurance || '',
                 email: foundPatient.email || '',
                 phone: foundPatient.phone || '',
-                dateOfBirth: foundPatient.dateOfBirth || '',
                 surgeryType: foundPatient.surgeryType || '',
                 surgeryDate: foundPatient.surgeryDate || '',
-                status: foundPatient.status || 'scheduled',
+                status: foundPatient.status || 'checked-in',
                 notes: foundPatient.notes || ''
             });
         } catch (err: any) {
@@ -113,11 +121,41 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
     const validate = () => {
         const newErrors: Record<string, string> = {};
 
-        // Name validation
-        if (!formData.name?.trim()) {
-            newErrors.name = 'Name is required';
-        } else if (formData.name.trim().length < 2) {
-            newErrors.name = 'Name must be at least 2 characters';
+        // First name validation
+        if (!formData.firstName?.trim()) {
+            newErrors.firstName = 'First name is required';
+        } else if (formData.firstName.trim().length < 2) {
+            newErrors.firstName = 'First name must be at least 2 characters';
+        }
+
+        // Last name validation
+        if (!formData.lastName?.trim()) {
+            newErrors.lastName = 'Last name is required';
+        } else if (formData.lastName.trim().length < 2) {
+            newErrors.lastName = 'Last name must be at least 2 characters';
+        }
+
+        // Date of birth validation
+        if (!formData.dob) {
+            newErrors.dob = 'Date of birth is required';
+        } else {
+            const dobDate = new Date(formData.dob);
+            const today = new Date();
+            if (dobDate > today) {
+                newErrors.dob = 'Date of birth cannot be in the future';
+            }
+        }
+
+        // Address validation
+        if (!formData.address?.trim()) {
+            newErrors.address = 'Address is required';
+        } else if (formData.address.trim().length < 5) {
+            newErrors.address = 'Address must be at least 5 characters';
+        }
+
+        // Health Care Insurance validation
+        if (!formData.healthCareInsurance?.trim()) {
+            newErrors.healthCareInsurance = 'Health Care Insurance is required';
         }
 
         // Email validation
@@ -191,7 +229,14 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
         setSuccess(false);
 
         try {
-            await patientService.updatePatient(patientId, formData);
+            // Construct name field from firstName and lastName for backward compatibility
+            const updateData = {
+                ...formData,
+                name: `${formData.firstName} ${formData.lastName}`.trim(),
+                dateOfBirth: formData.dob, // Map dob to dateOfBirth for backward compatibility
+            };
+
+            await patientService.updatePatient(patientId, updateData);
             setSuccess(true);
 
             // Redirect after delay
@@ -472,10 +517,13 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                                 },
                                             }}
                                         >
-                                            <MenuItem value="scheduled">Scheduled</MenuItem>
+                                            <MenuItem value="checked-in">Checked In</MenuItem>
+                                            <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
                                             <MenuItem value="in-progress">In Progress</MenuItem>
-                                            <MenuItem value="completed">Completed</MenuItem>
-                                            <MenuItem value="cancelled">Cancelled</MenuItem>
+                                            <MenuItem value="closing">Closing</MenuItem>
+                                            <MenuItem value="recovery">Recovery</MenuItem>
+                                            <MenuItem value="complete">Complete</MenuItem>
+                                            <MenuItem value="dismissal">Dismissal</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Box>

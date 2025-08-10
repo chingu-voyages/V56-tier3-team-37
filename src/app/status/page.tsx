@@ -20,7 +20,10 @@ import {
     Schedule as ScheduleIcon,
     CheckCircle as CheckCircleIcon,
     Warning as WarningIcon,
-    Cancel as CancelIcon
+    Cancel as CancelIcon,
+    HourglassEmpty as HourglassEmptyIcon,
+    LocalHospital as LocalHospitalIcon,
+    ExitToApp as ExitToAppIcon
 } from '@mui/icons-material';
 
 export default function StatusPage() {
@@ -49,14 +52,20 @@ export default function StatusPage() {
 
     const getStatusIcon = (status: Patient['status']) => {
         switch (status) {
-            case 'scheduled':
-                return <ScheduleIcon sx={{ color: '#07BEB8' }} />;
+            case 'checked-in':
+                return <PersonIcon sx={{ color: '#07BEB8' }} />;
+            case 'pre-procedure':
+                return <ScheduleIcon sx={{ color: '#8B5CF6' }} />;
             case 'in-progress':
                 return <WarningIcon sx={{ color: '#F59E0B' }} />;
-            case 'completed':
+            case 'closing':
+                return <HourglassEmptyIcon sx={{ color: '#EC4899' }} />;
+            case 'recovery':
+                return <LocalHospitalIcon sx={{ color: '#06B6D4' }} />;
+            case 'complete':
                 return <CheckCircleIcon sx={{ color: '#10B981' }} />;
-            case 'cancelled':
-                return <CancelIcon sx={{ color: '#EF4444' }} />;
+            case 'dismissal':
+                return <ExitToAppIcon sx={{ color: '#059669' }} />;
             default:
                 return <PersonIcon />;
         }
@@ -64,14 +73,20 @@ export default function StatusPage() {
 
     const getStatusColor = (status: Patient['status']) => {
         switch (status) {
-            case 'scheduled':
+            case 'checked-in':
                 return 'primary';
+            case 'pre-procedure':
+                return 'secondary';
             case 'in-progress':
                 return 'warning';
-            case 'completed':
+            case 'closing':
+                return 'info';
+            case 'recovery':
+                return 'info';
+            case 'complete':
                 return 'success';
-            case 'cancelled':
-                return 'error';
+            case 'dismissal':
+                return 'success';
             default:
                 return 'default';
         }
@@ -230,7 +245,7 @@ export default function StatusPage() {
                                 }}>
                                     <CardContent sx={{ p: 3 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                            {getStatusIcon(patient.status || 'scheduled')}
+                                            {getStatusIcon(patient.status || 'checked-in')}
                                             <Typography
                                                 variant="h6"
                                                 component="h2"
@@ -248,8 +263,8 @@ export default function StatusPage() {
                                         {/* Only show status for guests - no other information */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             <Chip
-                                                label={(patient.status || 'scheduled').replace('-', ' ')}
-                                                color={getStatusColor(patient.status || 'scheduled')}
+                                                label={(patient.status || 'checked-in').replace('-', ' ')}
+                                                color={getStatusColor(patient.status || 'checked-in')}
                                                 size="small"
                                                 sx={{
                                                     textTransform: 'capitalize',
@@ -260,16 +275,20 @@ export default function StatusPage() {
                                                         backgroundColor: '#07BEB8',
                                                         color: 'white'
                                                     },
+                                                    '&.MuiChip-colorSecondary': {
+                                                        backgroundColor: '#8B5CF6',
+                                                        color: 'white'
+                                                    },
                                                     '&.MuiChip-colorWarning': {
                                                         backgroundColor: '#F59E0B',
                                                         color: 'white'
                                                     },
-                                                    '&.MuiChip-colorSuccess': {
-                                                        backgroundColor: '#10B981',
+                                                    '&.MuiChip-colorInfo': {
+                                                        backgroundColor: '#06B6D4',
                                                         color: 'white'
                                                     },
-                                                    '&.MuiChip-colorError': {
-                                                        backgroundColor: '#EF4444',
+                                                    '&.MuiChip-colorSuccess': {
+                                                        backgroundColor: '#10B981',
                                                         color: 'white'
                                                     }
                                                 }}

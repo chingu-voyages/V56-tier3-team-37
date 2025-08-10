@@ -29,7 +29,7 @@ export interface Patient {
   dateOfBirth?: string;
   surgeryType?: string;
   surgeryDate?: string;
-  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status?: 'checked-in' | 'pre-procedure' | 'in-progress' | 'closing' | 'recovery' | 'complete' | 'dismissal';
   notes?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -50,7 +50,7 @@ export interface CreatePatientData {
   dateOfBirth?: string;
   surgeryType?: string;
   surgeryDate?: string;
-  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status?: 'checked-in' | 'pre-procedure' | 'in-progress' | 'closing' | 'recovery' | 'complete' | 'dismissal';
   notes?: string;
 }
 
@@ -66,6 +66,11 @@ class PatientService {
       let finalPatientData = { ...patientData };
       if (!patientData.patientId) {
         finalPatientData.patientId = await this.generateUniquePatientNumber();
+      }
+      
+      // Set default status to 'checked-in' if not provided
+      if (!finalPatientData.status) {
+        finalPatientData.status = 'checked-in';
       }
       
       const docRef = await addDoc(collection(db, this.collectionName), {
