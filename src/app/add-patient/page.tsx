@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { patientService, CreatePatientData } from '@/lib/patient-service';
 import { UserRole } from '@/lib/user-roles';
+import RestrictionPopup from '@/components/RestrictionPopup';
 import { v4 as uuidv4 } from 'uuid';
 import { motion } from 'framer-motion';
 import {
@@ -28,11 +29,12 @@ import InlineLoader from '@/components/InlineLoader';
 // Patient number generation is now handled automatically by the patient service
 
 export default function AddPatientPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [showRestrictionPopup, setShowRestrictionPopup] = useState(false);
 
   const [formData, setFormData] = useState<CreatePatientData>({
     firstName: '',
@@ -50,8 +52,11 @@ export default function AddPatientPage() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/auth');
+    } else if (!authLoading && user && userRole === UserRole.SURGICAL_TEAM) {
+      // Surgical Team cannot add patients - show restriction popup
+      setShowRestrictionPopup(true);
     }
-  }, [user, authLoading, router]);
+  }, [user, userRole, authLoading, router]);
 
   // Client-side validation
   const validate = () => {
@@ -510,6 +515,14 @@ export default function AddPatientPage() {
           </CardContent>
         </Card>
       </Box>
+
+      {/* Restriction Popup for Surgical Team */}
+      <RestrictionPopup
+        open={showRestrictionPopup}
+        onClose={() => setShowRestrictionPopup(false)}
+        title="Access Restricted"
+        message="As a Surgical Team member, you cannot add new patients. This functionality is restricted to administrators only. Please contact your administrator if you need to add a patient."
+      />
     </RoleGuard>
   );
 }

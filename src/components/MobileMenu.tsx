@@ -15,7 +15,11 @@ import {
     Person as PersonIcon,
     Logout as LogoutIcon,
     AccountCircle as AccountCircleIcon,
-    Close as CloseIcon
+    Close as CloseIcon,
+    Home as HomeIcon,
+    Timeline as TimelineIcon,
+    Update as UpdateIcon,
+    PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
 import { useAuth } from '@/lib/auth-context';
 import { UserRole } from '@/lib/user-roles';
@@ -29,10 +33,10 @@ interface MobileMenuProps {
 }
 
 const menuItems = [
-    { href: '/', label: 'Care Flow', isActive: true },
-    { href: '/status', label: 'Patient Status' },
-    { href: '/patients', label: 'Update Patient Status', adminOnly: true, surgicalTeamOnly: true },
-    { href: '/add-patient', label: 'Patient Information', adminOnly: true }
+    { href: '/', label: 'Care Flow', icon: HomeIcon, isActive: true },
+    { href: '/patients', label: 'Dashboard', icon: TimelineIcon, surgicalTeamOnly: true },
+    { href: '/add-patient', label: 'Add Patient', icon: PersonAddIcon, adminOnly: true },
+    { href: '/status', label: 'Patient Status', icon: UpdateIcon }
 ];
 
 export default function MobileMenu({ isOpen, onClose, triggerRef }: MobileMenuProps) {
@@ -279,17 +283,27 @@ export default function MobileMenu({ isOpen, onClose, triggerRef }: MobileMenuPr
                                                 }
                                             }}
                                         >
-                                            <Typography
-                                                variant="h6"
-                                                sx={{
-                                                    color: 'white',
-                                                    fontWeight: item.isActive ? 700 : 600,
-                                                    fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                                                    fontSize: '1.1rem'
-                                                }}
-                                            >
-                                                {item.label}
-                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <item.icon
+                                                    sx={{
+                                                        color: 'white',
+                                                        mr: 2,
+                                                        fontSize: 24,
+                                                        opacity: 0.9
+                                                    }}
+                                                />
+                                                <Typography
+                                                    variant="h6"
+                                                    sx={{
+                                                        color: 'white',
+                                                        fontWeight: item.isActive ? 700 : 600,
+                                                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                                        fontSize: '1.1rem'
+                                                    }}
+                                                >
+                                                    {item.label}
+                                                </Typography>
+                                            </Box>
                                         </Box>
                                     </motion.div>
                                 );

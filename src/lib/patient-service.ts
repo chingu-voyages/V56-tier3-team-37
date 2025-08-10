@@ -44,7 +44,7 @@ export interface CreatePatientData {
   healthCareInsurance?: string;
   patientNumber?: string; // Unique 6-character patient number
   patientId?: string; // Legacy field for existing patients
-  name?: string;
+  name?: string; // Full name (for backward compatibility)
   email: string;
   phone: string;
   dateOfBirth?: string;

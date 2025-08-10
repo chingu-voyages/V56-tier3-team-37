@@ -6,8 +6,11 @@ import { useInView } from 'framer-motion';
 import { useRef } from 'react';
 import Typewriter from 'typewriter-effect';
 import BrandButton from '@/components/BrandButton';
+import { useAuth } from '@/lib/auth-context';
+import { UserRole } from '@/lib/user-roles';
 
 export default function Home() {
+  const { user, userRole } = useAuth();
   const heroRef = useRef(null);
   const benefitsRef = useRef(null);
   const isHeroInView = useInView(heroRef, { once: true, margin: "-100px" });
@@ -166,24 +169,45 @@ export default function Home() {
               </BrandButton>
             </motion.div>
 
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <BrandButton
-                component={Link}
-                href="/auth"
-                sx={{
-                  fontSize: '1.125rem',
-                  px: 6,
-                  py: 1.5,
-                  minHeight: 48
-                }}
+            {!user ? (
+              <motion.div
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
               >
-                Login
-              </BrandButton>
-            </motion.div>
+                <BrandButton
+                  component={Link}
+                  href="/auth"
+                  sx={{
+                    fontSize: '1.125rem',
+                    px: 6,
+                    py: 1.5,
+                    minHeight: 48
+                  }}
+                >
+                  Login
+                </BrandButton>
+              </motion.div>
+            ) : (
+              <motion.div
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <BrandButton
+                  component={Link}
+                  href="/patients"
+                  sx={{
+                    fontSize: '1.125rem',
+                    px: 6,
+                    py: 1.5,
+                    minHeight: 48
+                  }}
+                >
+                  Dashboard
+                </BrandButton>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </motion.section>

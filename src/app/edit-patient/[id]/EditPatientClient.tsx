@@ -6,7 +6,9 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { patientService, CreatePatientData, Patient } from '@/lib/patient-service';
-import { UserRole } from '@/lib/user-roles';
+import { UserRole, canUpdatePatientStatus } from '@/lib/user-roles';
+import { PatientStatus } from '@/lib/status-validation';
+import RestrictionPopup from '@/components/RestrictionPopup';
 import {
     Box,
     Typography,
@@ -33,7 +35,7 @@ interface EditPatientClientProps {
 }
 
 export default function EditPatientClient({ params }: EditPatientClientProps) {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, userRole } = useAuth();
     const router = useRouter();
     const [patientId, setPatientId] = useState<string>('');
 
@@ -43,10 +45,12 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
     const [error, setError] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [patient, setPatient] = useState<Patient | null>(null);
+    const [showRestrictionPopup, setShowRestrictionPopup] = useState(false);
 
     const initialFormData: CreatePatientData = {
         firstName: '',
         lastName: '',
+        name: '',
         dob: '',
         address: '',
         healthCareInsurance: '',
@@ -95,10 +99,24 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
 
             setPatient(foundPatient);
 
+            // Debug: Log the patient data to see what we're working with
+            console.log('Found patient data:', foundPatient);
+            console.log('Patient name field:', foundPatient.name);
+            console.log('Patient firstName field:', foundPatient.firstName);
+            console.log('Patient lastName field:', foundPatient.lastName);
+
             // Populate form with existing data
+            // Prioritize the 'name' field from Firebase, then fall back to individual firstName/lastName
+            const fullName = foundPatient.name || '';
+            const nameParts = fullName.trim().split(' ');
+            const firstName = foundPatient.firstName || nameParts[0] || '';
+            const lastName = foundPatient.lastName || nameParts.slice(1).join(' ') || '';
+
+            console.log('Parsed firstName:', firstName);
+            console.log('Parsed lastName:', lastName);
+
             setFormData({
-                firstName: foundPatient.firstName || foundPatient.name?.split(' ')[0] || '',
-                lastName: foundPatient.lastName || foundPatient.name?.split(' ').slice(1).join(' ') || '',
+                name: fullName || `${firstName} ${lastName}`.trim(),
                 dob: foundPatient.dob || foundPatient.dateOfBirth || '',
                 address: foundPatient.address || '',
                 healthCareInsurance: foundPatient.healthCareInsurance || '',
@@ -501,7 +519,18 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                         <Select
                                             value={formData.status}
                                             label="Status"
-                                            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                                            onChange={(e) => {
+                                                const newStatus = e.target.value as PatientStatus;
+                                                const currentStatus = patient?.status || 'checked-in';
+
+                                                // Check if status update is allowed
+                                                if (userRole && !canUpdatePatientStatus(userRole, currentStatus, newStatus)) {
+                                                    setShowRestrictionPopup(true);
+                                                    return;
+                                                }
+
+                                                setFormData(prev => ({ ...prev, status: newStatus }));
+                                            }}
                                             sx={{
                                                 '& .MuiOutlinedInput-root': {
                                                     borderRadius: '12px',
@@ -615,6 +644,14 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                     </CardContent>
                 </Card>
             </Box>
+
+            {/* Restriction Popup for Surgical Team status updates */}
+            <RestrictionPopup
+                open={showRestrictionPopup}
+                onClose={() => setShowRestrictionPopup(false)}
+                title="Status Update Restricted"
+                message="As a Surgical Team member, you can only move patient status forward (ascending order). Moving status backward is restricted to administrators only. Please contact your administrator if you need to revert a status."
+            />
         </RoleGuard>
     );
 } 

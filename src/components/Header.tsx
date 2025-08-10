@@ -284,6 +284,50 @@ export default function Header() {
                 </Typography>
               </Box>
 
+              {/* Dashboard - Only show for authenticated users */}
+              {user && (userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM) && (
+                <Typography
+                  component={Link}
+                  href="/patients"
+                  variant="body1"
+                  sx={{
+                    fontWeight: 500,
+                    fontSize: '1rem',
+                    color: 'white',
+                    opacity: 0.9,
+                    lineHeight: 1.2,
+                    textDecoration: 'none',
+                    '&:hover': {
+                      opacity: 1
+                    }
+                  }}
+                >
+                  Dashboard
+                </Typography>
+              )}
+
+              {/* Add Patient - Only show for Admin */}
+              {user && userRole === UserRole.ADMIN && (
+                <Typography
+                  component={Link}
+                  href="/add-patient"
+                  variant="body1"
+                  sx={{
+                    fontWeight: 500,
+                    fontSize: '1rem',
+                    color: 'white',
+                    opacity: 0.9,
+                    lineHeight: 1.2,
+                    textDecoration: 'none',
+                    '&:hover': {
+                      opacity: 1
+                    }
+                  }}
+                >
+                  Add<br />Patient
+                </Typography>
+              )}
+
               {/* Patient Status */}
               <Typography
                 component={Link}
@@ -302,50 +346,6 @@ export default function Header() {
               >
                 Patient Status
               </Typography>
-
-              {/* Update Patient Status - Only show for authenticated users */}
-              {user && (userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM) && (
-                <Typography
-                  component={Link}
-                  href="/patients"
-                  variant="body1"
-                  sx={{
-                    fontWeight: 500,
-                    fontSize: '1rem',
-                    color: 'white',
-                    opacity: 0.9,
-                    lineHeight: 1.2,
-                    textDecoration: 'none',
-                    '&:hover': {
-                      opacity: 1
-                    }
-                  }}
-                >
-                  Update Patient<br />Status
-                </Typography>
-              )}
-
-              {/* Patient Information - Only show for Admin */}
-              {user && userRole === UserRole.ADMIN && (
-                <Typography
-                  component={Link}
-                  href="/add-patient"
-                  variant="body1"
-                  sx={{
-                    fontWeight: 500,
-                    fontSize: '1rem',
-                    color: 'white',
-                    opacity: 0.9,
-                    lineHeight: 1.2,
-                    textDecoration: 'none',
-                    '&:hover': {
-                      opacity: 1
-                    }
-                  }}
-                >
-                  Patient<br />Information
-                </Typography>
-              )}
             </>
           )}
         </Box>
