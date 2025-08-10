@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
 import { patientService, Patient, CreatePatientData } from '@/lib/patient-service';
-import { UserRole } from '@/lib/user-roles';
+import { UserRole, canAddPatients, canUpdatePatientStatus } from '@/lib/user-roles';
+import RestrictionPopup from '@/components/RestrictionPopup';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -34,7 +35,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Tooltip
+  Tooltip,
+  Avatar,
+  Divider
 } from '@mui/material';
 import BrandButton from '@/components/BrandButton';
 import BrandLoader from '@/components/BrandLoader';
@@ -47,11 +50,16 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
   FilterList as FilterIcon,
-  Update as UpdateIcon
+  CheckCircle as CheckCircleIcon,
+  Schedule as ScheduleIcon,
+  LocalHospital as LocalHospitalIcon,
+  HourglassEmpty as HourglassEmptyIcon,
+  ExitToApp as ExitToAppIcon,
+  Person as PersonIcon
 } from '@mui/icons-material';
 
 function PatientsPageContent() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, userRole } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const deletedParam = searchParams.get('deleted');
@@ -59,6 +67,7 @@ function PatientsPageContent() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showRestrictionPopup, setShowRestrictionPopup] = useState(false);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +84,14 @@ function PatientsPageContent() {
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [generatingNumbers, setGeneratingNumbers] = useState(false);
 
+  // Status update modal state
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [updatingPatient, setUpdatingPatient] = useState<Patient | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [statusUpdateError, setStatusUpdateError] = useState('');
+  const [statusUpdateSuccess, setStatusUpdateSuccess] = useState(false);
+
   const [editFormData, setEditFormData] = useState<CreatePatientData>({
     firstName: '',
     lastName: '',
@@ -86,6 +103,7 @@ function PatientsPageContent() {
     patientNumber: '',
     surgeryType: '',
     surgeryDate: '',
+    status: 'checked-in',
     status: 'checked-in',
     notes: '',
   });
@@ -177,6 +195,7 @@ function PatientsPageContent() {
       patientNumber: patient.patientId || '',
       surgeryType: patient.surgeryType || '',
       surgeryDate: patient.surgeryDate || '',
+      status: patient.status || 'checked-in',
       status: patient.status || 'checked-in',
       notes: patient.notes || '',
     });
@@ -406,8 +425,13 @@ function PatientsPageContent() {
               </BrandButton>
               <BrandButton
                 startIcon={<AddIcon />}
-                component={Link}
-                href="/add-patient"
+                onClick={() => {
+                  if (userRole && !canAddPatients(userRole)) {
+                    setShowRestrictionPopup(true);
+                  } else {
+                    router.push('/add-patient');
+                  }
+                }}
               >
                 Add Patient
               </BrandButton>
@@ -499,8 +523,13 @@ function PatientsPageContent() {
               </Typography>
               <BrandButton
                 startIcon={<AddIcon />}
-                component={Link}
-                href="/add-patient"
+                onClick={() => {
+                  if (userRole && !canAddPatients(userRole)) {
+                    setShowRestrictionPopup(true);
+                  } else {
+                    router.push('/add-patient');
+                  }
+                }}
               >
                 Add First Patient
               </BrandButton>
@@ -600,6 +629,8 @@ function PatientsPageContent() {
                     <MenuItem value="all">All Statuses</MenuItem>
                     <MenuItem value="checked-in">Checked In</MenuItem>
                     <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
+                    <MenuItem value="checked-in">Checked In</MenuItem>
+                    <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
                     <MenuItem value="in-progress">In Progress</MenuItem>
                     <MenuItem value="closing">Closing</MenuItem>
                     <MenuItem value="recovery">Recovery</MenuItem>
@@ -638,7 +669,7 @@ function PatientsPageContent() {
                   variant="contained"
                   onClick={generatePatientNumbersForExisting}
                   disabled={generatingNumbers}
-                  startIcon={generatingNumbers ? <InlineLoader size={16} /> : <UpdateIcon />}
+                  startIcon={generatingNumbers ? <InlineLoader size={16} /> : <RefreshIcon />}
                   sx={{
                     background: 'linear-gradient(135deg, #07BEB8 0%, #059669 100%)',
                     '&:hover': {
@@ -867,23 +898,6 @@ function PatientsPageContent() {
                           </TableCell>
                           <TableCell sx={{ textAlign: 'center' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                              <Tooltip title="Update Patient Status" arrow>
-                                <IconButton
-                                  onClick={() => handleEditPatient(patient)}
-                                  disabled={!patient.id}
-                                  sx={{
-                                    color: '#07BEB8',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(7, 190, 184, 0.1)',
-                                      transform: 'scale(1.1)'
-                                    },
-                                    transition: 'all 0.3s ease'
-                                  }}
-                                  aria-label={`Update status for ${patient.name}`}
-                                >
-                                  <UpdateIcon />
-                                </IconButton>
-                              </Tooltip>
                               <Tooltip title="Edit Patient Details" arrow>
                                 <IconButton
                                   component={Link}
@@ -1254,6 +1268,8 @@ function PatientsPageContent() {
                 >
                   <MenuItem value="checked-in">Checked In</MenuItem>
                   <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
+                  <MenuItem value="checked-in">Checked In</MenuItem>
+                  <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
                   <MenuItem value="in-progress">In Progress</MenuItem>
                   <MenuItem value="closing">Closing</MenuItem>
                   <MenuItem value="recovery">Recovery</MenuItem>
@@ -1306,7 +1322,179 @@ function PatientsPageContent() {
             </BrandButton>
           </DialogActions>
         </Dialog>
+
+        {/* Status Update Modal */}
+        <Dialog
+          open={statusModalOpen}
+          onClose={handleCloseStatusModal}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
+              border: '1px solid rgba(7, 190, 184, 0.1)',
+              overflow: 'hidden'
+            }
+          }}
+        >
+          <DialogTitle sx={{
+            background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
+            color: 'white',
+            p: 3,
+            textAlign: 'center'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+              <Avatar sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', width: 48, height: 48 }}>
+                <PersonIcon sx={{ fontSize: 28 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  Update Patient Status
+                </Typography>
+                {updatingPatient && (
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    {updatingPatient.name}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </DialogTitle>
+
+          <DialogContent sx={{ p: 0 }}>
+            {statusUpdateError && (
+              <Alert severity="error" sx={{ m: 3, borderRadius: 2 }}>
+                {statusUpdateError}
+              </Alert>
+            )}
+            {statusUpdateSuccess && (
+              <Alert severity="success" sx={{ m: 3, borderRadius: 2 }}>
+                Patient status updated successfully! Closing modal...
+              </Alert>
+            )}
+
+            <Box sx={{ p: 3 }}>
+              <Typography variant="body1" sx={{ mb: 3, textAlign: 'center', color: '#6B7280' }}>
+                Select the new status for this patient
+              </Typography>
+
+              <Box sx={{ display: 'grid', gap: 2 }}>
+                {statusOptions.map((option) => (
+                  <motion.div
+                    key={option.value}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Box
+                      onClick={() => setSelectedStatus(option.value)}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        p: 2,
+                        borderRadius: 2,
+                        border: `2px solid ${selectedStatus === option.value ? option.color : '#E5E7EB'}`,
+                        backgroundColor: selectedStatus === option.value ? `${option.color}10` : 'white',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          borderColor: option.color,
+                          backgroundColor: `${option.color}08`,
+                          transform: 'translateX(4px)'
+                        }
+                      }}
+                    >
+                      <Avatar
+                        sx={{
+                          bgcolor: option.color,
+                          width: 40,
+                          height: 40,
+                          '&:hover': {
+                            transform: 'rotate(360deg)',
+                            transition: 'transform 0.6s ease'
+                          }
+                        }}
+                      >
+                        {option.icon}
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: '#1F2937', mb: 0.5 }}>
+                          {option.label}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.875rem' }}>
+                          {option.description}
+                        </Typography>
+                      </Box>
+                      {selectedStatus === option.value && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <CheckCircleIcon sx={{ color: option.color, fontSize: 28 }} />
+                        </motion.div>
+                      )}
+                    </Box>
+                  </motion.div>
+                ))}
+              </Box>
+            </Box>
+          </DialogContent>
+
+          <DialogActions sx={{
+            p: 3,
+            pt: 2,
+            borderTop: '1px solid rgba(7, 190, 184, 0.1)',
+            gap: 2,
+            display: 'flex',
+            justifyContent: 'center',
+            background: '#F9FAFB'
+          }}>
+            <Button
+              onClick={handleCloseStatusModal}
+              disabled={statusUpdateLoading}
+              variant="outlined"
+              sx={{
+                borderColor: '#D1D5DB',
+                color: '#6B7280',
+                '&:hover': {
+                  borderColor: '#9CA3AF',
+                  backgroundColor: 'rgba(156, 163, 175, 0.04)'
+                }
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleStatusUpdate}
+              disabled={statusUpdateLoading || !selectedStatus}
+              variant="contained"
+              startIcon={statusUpdateLoading ? <InlineLoader size={20} /> : undefined}
+              sx={{
+                background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)'
+                },
+                '&:disabled': {
+                  background: '#E5E7EB',
+                  color: '#9CA3AF'
+                }
+              }}
+            >
+              {statusUpdateLoading ? 'Updating...' : 'Update Status'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
+
+      {/* Restriction Popup for Surgical Team */}
+      <RestrictionPopup
+        open={showRestrictionPopup}
+        onClose={() => setShowRestrictionPopup(false)}
+        title="Access Restricted"
+        message="This functionality is restricted to administrators only. Please contact your administrator for assistance."
+      />
     </RoleGuard>
   );
 }

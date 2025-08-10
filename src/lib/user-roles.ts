@@ -56,9 +56,38 @@ export function canAccessPatientStatus(userRole: UserRole): boolean {
 }
 
 export function canAddPatients(userRole: UserRole): boolean {
-  return userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM;
+  return userRole === UserRole.ADMIN;
 }
 
 export function canUpdatePatients(userRole: UserRole): boolean {
   return userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM;
+}
+
+// New function to check if status update is allowed for Surgical Team
+export function canUpdatePatientStatus(userRole: UserRole, currentStatus: string, newStatus: string): boolean {
+  // Admin can do anything
+  if (userRole === UserRole.ADMIN) {
+    return true;
+  }
+  
+  // Surgical Team can only move forward (ascending)
+  if (userRole === UserRole.SURGICAL_TEAM) {
+    const statusOrder = [
+      'checked-in',
+      'pre-procedure', 
+      'in-progress',
+      'closing',
+      'recovery',
+      'complete',
+      'dismissal'
+    ];
+    
+    const currentIndex = statusOrder.indexOf(currentStatus);
+    const newIndex = statusOrder.indexOf(newStatus);
+    
+    // Only allow moving forward (newIndex > currentIndex)
+    return newIndex > currentIndex;
+  }
+  
+  return false;
 } 

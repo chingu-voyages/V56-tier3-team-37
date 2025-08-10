@@ -260,6 +260,7 @@ export default function StatusPage() {
                                     <CardContent sx={{ p: 3 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             {getStatusIcon(patient.status || 'checked-in')}
+                                            {getStatusIcon(patient.status || 'checked-in')}
                                             <Typography
                                                 variant="h6"
                                                 component="h2"
@@ -277,6 +278,8 @@ export default function StatusPage() {
                                         {/* Only show status for guests - no other information */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             <Chip
+                                                label={(patient.status || 'checked-in').replace('-', ' ')}
+                                                color={getStatusColor(patient.status || 'checked-in')}
                                                 label={(patient.status || 'checked-in').replace('-', ' ')}
                                                 color={getStatusColor(patient.status || 'checked-in')}
                                                 size="small"
@@ -303,6 +306,10 @@ export default function StatusPage() {
                                                     },
                                                     '&.MuiChip-colorHealing': {
                                                         backgroundColor: '#5AAE61',
+                                                        color: 'white'
+                                                    },
+                                                    '&.MuiChip-colorInfo': {
+                                                        backgroundColor: '#06B6D4',
                                                         color: 'white'
                                                     },
                                                     '&.MuiChip-colorSuccess': {
