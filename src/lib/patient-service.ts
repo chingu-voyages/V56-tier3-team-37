@@ -29,7 +29,7 @@ export interface Patient {
   dateOfBirth?: string;
   surgeryType?: string;
   surgeryDate?: string;
-  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status?: 'checked-in' | 'pre-procedure' | 'in-progress' | 'closing' | 'recovery' | 'completed' | 'dismissal';
   notes?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -50,7 +50,7 @@ export interface CreatePatientData {
   dateOfBirth?: string;
   surgeryType?: string;
   surgeryDate?: string;
-  status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status?: 'checked-in' | 'pre-procedure' | 'in-progress' | 'closing' | 'recovery' | 'completed' | 'dismissal';
   notes?: string;
 }
 

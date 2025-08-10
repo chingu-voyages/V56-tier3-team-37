@@ -112,14 +112,20 @@ function DeletePatientContent() {
 
   const getStatusColor = (status: Patient['status']) => {
     switch (status) {
-      case 'scheduled':
-        return 'primary';
+      case 'checked-in':
+        return 'checkin';
+      case 'pre-procedure':
+        return 'preprocedure';
       case 'in-progress':
-        return 'warning';
+        return 'inprogress';
+      case 'closing':
+        return 'closed';
+      case 'recovery':
+        return 'healing';
       case 'completed':
         return 'success';
-      case 'cancelled':
-        return 'error';
+      case 'dismissal':
+        return 'dismissed';
       default:
         return 'default';
     }

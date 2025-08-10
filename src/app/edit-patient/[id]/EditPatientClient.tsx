@@ -51,7 +51,7 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
         dateOfBirth: '',
         surgeryType: '',
         surgeryDate: '',
-        status: 'scheduled',
+        status: 'checked-in',
         notes: ''
     });
 
@@ -98,7 +98,7 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                 dateOfBirth: foundPatient.dateOfBirth || '',
                 surgeryType: foundPatient.surgeryType || '',
                 surgeryDate: foundPatient.surgeryDate || '',
-                status: foundPatient.status || 'scheduled',
+                status: foundPatient.status || 'checked-in',
                 notes: foundPatient.notes || ''
             });
         } catch (err: any) {
@@ -472,10 +472,13 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                                 },
                                             }}
                                         >
-                                            <MenuItem value="scheduled">Scheduled</MenuItem>
+                                            <MenuItem value="checked-in">Checked In</MenuItem>
+                                            <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
                                             <MenuItem value="in-progress">In Progress</MenuItem>
+                                            <MenuItem value="closing">Closing</MenuItem>
+                                            <MenuItem value="recovery">Recovery</MenuItem>
                                             <MenuItem value="completed">Completed</MenuItem>
-                                            <MenuItem value="cancelled">Cancelled</MenuItem>
+                                            <MenuItem value="dismissal">Dismissal</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Box>

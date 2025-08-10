@@ -86,7 +86,7 @@ function PatientsPageContent() {
     patientNumber: '',
     surgeryType: '',
     surgeryDate: '',
-    status: 'scheduled',
+    status: 'checked-in',
     notes: '',
   });
 
@@ -177,7 +177,7 @@ function PatientsPageContent() {
       patientNumber: patient.patientId || '',
       surgeryType: patient.surgeryType || '',
       surgeryDate: patient.surgeryDate || '',
-      status: patient.status || 'scheduled',
+      status: patient.status || 'checked-in',
       notes: patient.notes || '',
     });
     setEditError('');
@@ -318,19 +318,25 @@ function PatientsPageContent() {
   };
 
   const getStatusColor = (status: Patient['status']) => {
-    switch (status) {
-      case 'scheduled':
-        return 'primary';
-      case 'in-progress':
-        return 'warning';
-      case 'completed':
-        return 'success';
-      case 'cancelled':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
+      switch (status) {
+          case 'checked-in':
+              return 'checkin';
+          case 'pre-procedure':
+              return 'preprocedure';
+          case 'in-progress':
+              return 'inprogress';
+          case 'closing':
+              return 'closed';
+          case 'recovery':
+              return 'healing';
+          case 'completed':
+              return 'success';
+          case 'dismissal':
+              return 'dismissed';
+          default:
+              return 'default';
+        }
+    };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -592,10 +598,13 @@ function PatientsPageContent() {
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
                     <MenuItem value="all">All Statuses</MenuItem>
-                    <MenuItem value="scheduled">Scheduled</MenuItem>
+                    <MenuItem value="checked-in">Checked In</MenuItem>
+                    <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
                     <MenuItem value="in-progress">In Progress</MenuItem>
+                    <MenuItem value="closing">Closing</MenuItem>
+                    <MenuItem value="recovery">Recovery</MenuItem>
                     <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="cancelled">Cancelled</MenuItem>
+                    <MenuItem value="dismissal">Dismissal</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -807,30 +816,42 @@ function PatientsPageContent() {
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={(patient.status || 'scheduled').replace('-', ' ')}
-                              color={getStatusColor(patient.status || 'scheduled')}
+                              label={(patient.status || 'checked-in').replace('-', ' ')}
+                              color={getStatusColor(patient.status || 'checked-in')}
                               size="small"
                               sx={{
                                 textTransform: 'capitalize',
                                 fontWeight: 600,
                                 borderRadius: 1.5,
                                 fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                                '&.MuiChip-colorPrimary': {
-                                  backgroundColor: '#07BEB8',
-                                  color: 'white'
-                                },
-                                '&.MuiChip-colorWarning': {
-                                  backgroundColor: '#F59E0B',
-                                  color: 'white'
-                                },
-                                '&.MuiChip-colorSuccess': {
-                                  backgroundColor: '#10B981',
-                                  color: 'white'
-                                },
-                                '&.MuiChip-colorError': {
-                                  backgroundColor: '#EF4444',
-                                  color: 'white'
-                                }
+                                  '&.MuiChip-colorCheckin': {
+                                    backgroundColor: '#737373',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorPreprocedure': {
+                                    backgroundColor: '#4F81BD',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorInprogress': {
+                                    backgroundColor: '#2B5CAA',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorClosed': {
+                                    backgroundColor: '#E5B567',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorHealing': {
+                                    backgroundColor: '#5AAE61',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorSuccess': {
+                                    backgroundColor: '#1B7837',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorDismissed': {
+                                    backgroundColor: '#1F9E89',
+                                    color: 'white'
+                                  }
                               }}
                             />
                           </TableCell>
@@ -1231,10 +1252,13 @@ function PatientsPageContent() {
                     }
                   }}
                 >
-                  <MenuItem value="scheduled">Scheduled</MenuItem>
+                  <MenuItem value="checked-in">Checked In</MenuItem>
+                  <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
                   <MenuItem value="in-progress">In Progress</MenuItem>
+                  <MenuItem value="closing">Closing</MenuItem>
+                  <MenuItem value="recovery">Recovery</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
-                  <MenuItem value="cancelled">Cancelled</MenuItem>
+                  <MenuItem value="dismissal">Dismissal</MenuItem>
                 </Select>
               </FormControl>
 
