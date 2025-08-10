@@ -6,9 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { patientService, CreatePatientData, Patient } from '@/lib/patient-service';
-import { UserRole, canUpdatePatientStatus } from '@/lib/user-roles';
-import { PatientStatus } from '@/lib/status-validation';
-import RestrictionPopup from '@/components/RestrictionPopup';
+import { UserRole } from '@/lib/user-roles';
 import {
     Box,
     Typography,
@@ -35,7 +33,7 @@ interface EditPatientClientProps {
 }
 
 export default function EditPatientClient({ params }: EditPatientClientProps) {
-    const { user, loading: authLoading, userRole } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [patientId, setPatientId] = useState<string>('');
 
@@ -45,24 +43,17 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
     const [error, setError] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [patient, setPatient] = useState<Patient | null>(null);
-    const [showRestrictionPopup, setShowRestrictionPopup] = useState(false);
 
-    const initialFormData: CreatePatientData = {
-        firstName: '',
-        lastName: '',
+    const [formData, setFormData] = useState<CreatePatientData>({
         name: '',
-        dob: '',
-        address: '',
-        healthCareInsurance: '',
         email: '',
         phone: '',
+        dateOfBirth: '',
         surgeryType: '',
         surgeryDate: '',
         status: 'checked-in',
-        notes: '',
-    };
-
-    const [formData, setFormData] = useState<CreatePatientData>(initialFormData);
+        notes: ''
+    });
 
     useEffect(() => {
         const getParams = async () => {
@@ -100,27 +91,16 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
             setPatient(foundPatient);
 
             // Populate form with existing data
-            // Prioritize the 'name' field from Firebase, then fall back to individual firstName/lastName
-            const fullName = foundPatient.name || '';
-            const nameParts = fullName.trim().split(' ');
-            const firstName = foundPatient.firstName || nameParts[0] || '';
-            const lastName = foundPatient.lastName || nameParts.slice(1).join(' ') || '';
-
-            const populatedFormData = {
-                firstName: firstName,
-                lastName: lastName,
-                dob: foundPatient.dob || foundPatient.dateOfBirth || '',
-                address: foundPatient.address || '',
-                healthCareInsurance: foundPatient.healthCareInsurance || '',
+            setFormData({
+                name: foundPatient.name || '',
                 email: foundPatient.email || '',
                 phone: foundPatient.phone || '',
+                dateOfBirth: foundPatient.dateOfBirth || '',
                 surgeryType: foundPatient.surgeryType || '',
                 surgeryDate: foundPatient.surgeryDate || '',
                 status: foundPatient.status || 'checked-in',
                 notes: foundPatient.notes || ''
-            };
-
-            setFormData(populatedFormData);
+            });
         } catch (err: any) {
             console.error('Fetch Patient Error:', err);
             setError(err.message || 'Failed to fetch patient data');
@@ -133,36 +113,12 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
     const validate = () => {
         const newErrors: Record<string, string> = {};
 
-        // First name validation
-        if (!formData.firstName?.trim()) {
-            newErrors.firstName = 'First name is required';
-        } else if (formData.firstName.trim().length < 2) {
-            newErrors.firstName = 'First name must be at least 2 characters';
+        // Name validation
+        if (!formData.name?.trim()) {
+            newErrors.name = 'Name is required';
+        } else if (formData.name.trim().length < 2) {
+            newErrors.name = 'Name must be at least 2 characters';
         }
-
-        // Last name validation
-        if (!formData.lastName?.trim()) {
-            newErrors.lastName = 'Last name is required';
-        } else if (formData.lastName.trim().length < 2) {
-            newErrors.lastName = 'Last name must be at least 2 characters';
-        }
-
-        // Date of birth validation - make it optional for now
-        if (formData.dob) {
-            const dobDate = new Date(formData.dob);
-            const today = new Date();
-            if (dobDate > today) {
-                newErrors.dob = 'Date of birth cannot be in the future';
-            }
-        }
-
-        // Address validation - make it optional for now
-        if (formData.address?.trim() && formData.address.trim().length < 5) {
-            newErrors.address = 'Address must be at least 5 characters if provided';
-        }
-
-        // Health Care Insurance validation - make it optional for now
-        // No validation needed if optional
 
         // Email validation
         if (!formData.email?.trim()) {
@@ -224,7 +180,6 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
 
         // Validate form
         const validationErrors = validate();
-
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
@@ -236,14 +191,7 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
         setSuccess(false);
 
         try {
-            // Prepare update data with correct field names
-            const updateData = {
-                ...formData,
-                name: `${formData.firstName} ${formData.lastName}`.trim(), // Keep name for backward compatibility
-                dateOfBirth: formData.dob, // Map dob to dateOfBirth for backward compatibility
-            };
-
-            await patientService.updatePatient(patientId, updateData);
+            await patientService.updatePatient(patientId, formData);
             setSuccess(true);
 
             // Redirect after delay
@@ -333,63 +281,18 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                     </Alert>
                 )}
 
-                {/* Display validation errors prominently */}
-                {Object.keys(errors).length > 0 && (
-                    <Alert severity="error" sx={{ mb: 3 }}>
-                        <Typography variant="h6" sx={{ mb: 1 }}>Please fix the following errors:</Typography>
-                        <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                            {Object.entries(errors).map(([field, errorMessage]) => (
-                                <li key={field}>
-                                    <strong>{field.charAt(0).toUpperCase() + field.slice(1)}:</strong> {errorMessage}
-                                </li>
-                            ))}
-                        </ul>
-                    </Alert>
-                )}
-
                 <Card>
                     <CardContent>
-                        <form
-                            onSubmit={(e) => {
-                                handleSubmit(e);
-                            }}
-                        >
+                        <form onSubmit={handleSubmit}>
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                                 <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
                                     <TextField
                                         fullWidth
-                                        label="First Name"
-                                        value={formData.firstName}
-                                        onChange={handleInputChange('firstName')}
-                                        error={!!errors.firstName}
-                                        helperText={errors.firstName}
-                                        required
-                                        disabled={loading}
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: '12px',
-                                                '& fieldset': {
-                                                    borderColor: '#E5E7EB',
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: '#07BEB8',
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#07BEB8',
-                                                },
-                                            },
-                                        }}
-                                    />
-                                </Box>
-
-                                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                                    <TextField
-                                        fullWidth
-                                        label="Last Name"
-                                        value={formData.lastName}
-                                        onChange={handleInputChange('lastName')}
-                                        error={!!errors.lastName}
-                                        helperText={errors.lastName}
+                                        label="Full Name"
+                                        value={formData.name}
+                                        onChange={handleInputChange('name')}
+                                        error={!!errors.name}
+                                        helperText={errors.name}
                                         required
                                         disabled={loading}
                                         sx={{
@@ -467,64 +370,10 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                 <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
                                     <TextField
                                         fullWidth
-                                        label="Address"
-                                        value={formData.address}
-                                        onChange={handleInputChange('address')}
-                                        error={!!errors.address}
-                                        helperText={errors.address}
-                                        disabled={loading}
-                                        placeholder="Enter patient's address"
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: '12px',
-                                                '& fieldset': {
-                                                    borderColor: '#E5E7EB',
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: '#07BEB8',
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#07BEB8',
-                                                },
-                                            },
-                                        }}
-                                    />
-                                </Box>
-
-                                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                                    <TextField
-                                        fullWidth
-                                        label="Health Care Insurance"
-                                        value={formData.healthCareInsurance}
-                                        onChange={handleInputChange('healthCareInsurance')}
-                                        error={!!errors.healthCareInsurance}
-                                        helperText={errors.healthCareInsurance}
-                                        disabled={loading}
-                                        placeholder="Enter insurance provider"
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: '12px',
-                                                '& fieldset': {
-                                                    borderColor: '#E5E7EB',
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: '#07BEB8',
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#07BEB8',
-                                                },
-                                            },
-                                        }}
-                                    />
-                                </Box>
-
-                                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                                    <TextField
-                                        fullWidth
                                         label="Date of Birth"
                                         type="date"
-                                        value={formData.dob}
-                                        onChange={handleInputChange('dob')}
+                                        value={formData.dateOfBirth}
+                                        onChange={handleInputChange('dateOfBirth')}
                                         InputLabelProps={{ shrink: true }}
                                         disabled={loading}
                                         sx={{
@@ -607,18 +456,7 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                         <Select
                                             value={formData.status}
                                             label="Status"
-                                            onChange={(e) => {
-                                                const newStatus = e.target.value as PatientStatus;
-                                                const currentStatus = patient?.status || 'checked-in';
-
-                                                // Check if status update is allowed
-                                                if (userRole && !canUpdatePatientStatus(userRole, currentStatus, newStatus)) {
-                                                    setShowRestrictionPopup(true);
-                                                    return;
-                                                }
-
-                                                setFormData(prev => ({ ...prev, status: newStatus }));
-                                            }}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
                                             sx={{
                                                 '& .MuiOutlinedInput-root': {
                                                     borderRadius: '12px',
@@ -639,7 +477,7 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                             <MenuItem value="in-progress">In Progress</MenuItem>
                                             <MenuItem value="closing">Closing</MenuItem>
                                             <MenuItem value="recovery">Recovery</MenuItem>
-                                            <MenuItem value="complete">Complete</MenuItem>
+                                            <MenuItem value="completed">Completed</MenuItem>
                                             <MenuItem value="dismissal">Dismissal</MenuItem>
                                         </Select>
                                     </FormControl>
@@ -718,16 +556,10 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                         >
                                             Cancel
                                         </Button>
-
                                         <BrandButton
                                             type="submit"
                                             disabled={loading}
                                             startIcon={loading ? <InlineLoader size={20} /> : <SaveIcon />}
-                                            onClick={(e) => {
-                                                // Prevent default form submission and handle manually
-                                                e.preventDefault();
-                                                handleSubmit(e);
-                                            }}
                                         >
                                             {loading ? 'Updating...' : 'Update Patient'}
                                         </BrandButton>
@@ -738,14 +570,6 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                     </CardContent>
                 </Card>
             </Box>
-
-            {/* Restriction Popup for Surgical Team status updates */}
-            <RestrictionPopup
-                open={showRestrictionPopup}
-                onClose={() => setShowRestrictionPopup(false)}
-                title="Status Update Restricted"
-                message="As a Surgical Team member, you can only move patient status forward (ascending order). Moving status backward is restricted to administrators only. Please contact your administrator if you need to revert a status."
-            />
         </RoleGuard>
     );
 } 

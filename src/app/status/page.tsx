@@ -74,7 +74,7 @@ export default function StatusPage() {
                 return <AssignmentTurnedInIcon sx={{ color: '#E5B567' }} />;
             case 'recovery':
                 return <HealingIcon sx={{ color: '#5AAE61' }} />;
-            case 'completed':
+            case 'complete':
                 return <CheckCircleIcon sx={{ color: '#1B7837' }} />;
             case 'dismissal':
                 return <ExitToAppIcon sx={{ color: '#1F9E89' }} />;
@@ -95,7 +95,7 @@ export default function StatusPage() {
                 return 'closed';
             case 'recovery':
                 return 'healing';
-            case 'completed':
+            case 'complete':
                 return 'success';
             case 'dismissal':
                 return 'dismissed';
@@ -260,7 +260,6 @@ export default function StatusPage() {
                                     <CardContent sx={{ p: 3 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             {getStatusIcon(patient.status || 'checked-in')}
-                                            {getStatusIcon(patient.status || 'checked-in')}
                                             <Typography
                                                 variant="h6"
                                                 component="h2"
@@ -278,8 +277,6 @@ export default function StatusPage() {
                                         {/* Only show status for guests - no other information */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             <Chip
-                                                label={(patient.status || 'checked-in').replace('-', ' ')}
-                                                color={getStatusColor(patient.status || 'checked-in')}
                                                 label={(patient.status || 'checked-in').replace('-', ' ')}
                                                 color={getStatusColor(patient.status || 'checked-in')}
                                                 size="small"
@@ -306,10 +303,6 @@ export default function StatusPage() {
                                                     },
                                                     '&.MuiChip-colorHealing': {
                                                         backgroundColor: '#5AAE61',
-                                                        color: 'white'
-                                                    },
-                                                    '&.MuiChip-colorInfo': {
-                                                        backgroundColor: '#06B6D4',
                                                         color: 'white'
                                                     },
                                                     '&.MuiChip-colorSuccess': {

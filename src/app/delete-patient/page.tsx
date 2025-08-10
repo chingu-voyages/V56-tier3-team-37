@@ -122,7 +122,7 @@ function DeletePatientContent() {
         return 'closed';
       case 'recovery':
         return 'healing';
-      case 'completed':
+      case 'complete':
         return 'success';
       case 'dismissal':
         return 'dismissed';
