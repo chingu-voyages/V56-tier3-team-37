@@ -99,12 +99,6 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
 
             setPatient(foundPatient);
 
-            // Debug: Log the patient data to see what we're working with
-            console.log('Found patient data:', foundPatient);
-            console.log('Patient name field:', foundPatient.name);
-            console.log('Patient firstName field:', foundPatient.firstName);
-            console.log('Patient lastName field:', foundPatient.lastName);
-
             // Populate form with existing data
             // Prioritize the 'name' field from Firebase, then fall back to individual firstName/lastName
             const fullName = foundPatient.name || '';
@@ -112,11 +106,9 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
             const firstName = foundPatient.firstName || nameParts[0] || '';
             const lastName = foundPatient.lastName || nameParts.slice(1).join(' ') || '';
 
-            console.log('Parsed firstName:', firstName);
-            console.log('Parsed lastName:', lastName);
-
-            setFormData({
-                name: fullName || `${firstName} ${lastName}`.trim(),
+            const populatedFormData = {
+                firstName: firstName,
+                lastName: lastName,
                 dob: foundPatient.dob || foundPatient.dateOfBirth || '',
                 address: foundPatient.address || '',
                 healthCareInsurance: foundPatient.healthCareInsurance || '',
@@ -126,7 +118,9 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                 surgeryDate: foundPatient.surgeryDate || '',
                 status: foundPatient.status || 'checked-in',
                 notes: foundPatient.notes || ''
-            });
+            };
+
+            setFormData(populatedFormData);
         } catch (err: any) {
             console.error('Fetch Patient Error:', err);
             setError(err.message || 'Failed to fetch patient data');
@@ -153,10 +147,8 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
             newErrors.lastName = 'Last name must be at least 2 characters';
         }
 
-        // Date of birth validation
-        if (!formData.dob) {
-            newErrors.dob = 'Date of birth is required';
-        } else {
+        // Date of birth validation - make it optional for now
+        if (formData.dob) {
             const dobDate = new Date(formData.dob);
             const today = new Date();
             if (dobDate > today) {
@@ -164,17 +156,13 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
             }
         }
 
-        // Address validation
-        if (!formData.address?.trim()) {
-            newErrors.address = 'Address is required';
-        } else if (formData.address.trim().length < 5) {
-            newErrors.address = 'Address must be at least 5 characters';
+        // Address validation - make it optional for now
+        if (formData.address?.trim() && formData.address.trim().length < 5) {
+            newErrors.address = 'Address must be at least 5 characters if provided';
         }
 
-        // Health Care Insurance validation
-        if (!formData.healthCareInsurance?.trim()) {
-            newErrors.healthCareInsurance = 'Health Care Insurance is required';
-        }
+        // Health Care Insurance validation - make it optional for now
+        // No validation needed if optional
 
         // Email validation
         if (!formData.email?.trim()) {
@@ -236,6 +224,7 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
 
         // Validate form
         const validationErrors = validate();
+
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
@@ -247,10 +236,10 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
         setSuccess(false);
 
         try {
-            // Construct name field from firstName and lastName for backward compatibility
+            // Prepare update data with correct field names
             const updateData = {
                 ...formData,
-                name: `${formData.firstName} ${formData.lastName}`.trim(),
+                name: `${formData.firstName} ${formData.lastName}`.trim(), // Keep name for backward compatibility
                 dateOfBirth: formData.dob, // Map dob to dateOfBirth for backward compatibility
             };
 
@@ -344,18 +333,63 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                     </Alert>
                 )}
 
+                {/* Display validation errors prominently */}
+                {Object.keys(errors).length > 0 && (
+                    <Alert severity="error" sx={{ mb: 3 }}>
+                        <Typography variant="h6" sx={{ mb: 1 }}>Please fix the following errors:</Typography>
+                        <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                            {Object.entries(errors).map(([field, errorMessage]) => (
+                                <li key={field}>
+                                    <strong>{field.charAt(0).toUpperCase() + field.slice(1)}:</strong> {errorMessage}
+                                </li>
+                            ))}
+                        </ul>
+                    </Alert>
+                )}
+
                 <Card>
                     <CardContent>
-                        <form onSubmit={handleSubmit}>
+                        <form
+                            onSubmit={(e) => {
+                                handleSubmit(e);
+                            }}
+                        >
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                                 <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
                                     <TextField
                                         fullWidth
-                                        label="Full Name"
-                                        value={formData.name}
-                                        onChange={handleInputChange('name')}
-                                        error={!!errors.name}
-                                        helperText={errors.name}
+                                        label="First Name"
+                                        value={formData.firstName}
+                                        onChange={handleInputChange('firstName')}
+                                        error={!!errors.firstName}
+                                        helperText={errors.firstName}
+                                        required
+                                        disabled={loading}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '12px',
+                                                '& fieldset': {
+                                                    borderColor: '#E5E7EB',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: '#07BEB8',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#07BEB8',
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </Box>
+
+                                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="Last Name"
+                                        value={formData.lastName}
+                                        onChange={handleInputChange('lastName')}
+                                        error={!!errors.lastName}
+                                        helperText={errors.lastName}
                                         required
                                         disabled={loading}
                                         sx={{
@@ -433,10 +467,64 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                 <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
                                     <TextField
                                         fullWidth
+                                        label="Address"
+                                        value={formData.address}
+                                        onChange={handleInputChange('address')}
+                                        error={!!errors.address}
+                                        helperText={errors.address}
+                                        disabled={loading}
+                                        placeholder="Enter patient's address"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '12px',
+                                                '& fieldset': {
+                                                    borderColor: '#E5E7EB',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: '#07BEB8',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#07BEB8',
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </Box>
+
+                                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                                    <TextField
+                                        fullWidth
+                                        label="Health Care Insurance"
+                                        value={formData.healthCareInsurance}
+                                        onChange={handleInputChange('healthCareInsurance')}
+                                        error={!!errors.healthCareInsurance}
+                                        helperText={errors.healthCareInsurance}
+                                        disabled={loading}
+                                        placeholder="Enter insurance provider"
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '12px',
+                                                '& fieldset': {
+                                                    borderColor: '#E5E7EB',
+                                                },
+                                                '&:hover fieldset': {
+                                                    borderColor: '#07BEB8',
+                                                },
+                                                '&.Mui-focused fieldset': {
+                                                    borderColor: '#07BEB8',
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </Box>
+
+                                <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                                    <TextField
+                                        fullWidth
                                         label="Date of Birth"
                                         type="date"
-                                        value={formData.dateOfBirth}
-                                        onChange={handleInputChange('dateOfBirth')}
+                                        value={formData.dob}
+                                        onChange={handleInputChange('dob')}
                                         InputLabelProps={{ shrink: true }}
                                         disabled={loading}
                                         sx={{
@@ -630,10 +718,16 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                         >
                                             Cancel
                                         </Button>
+
                                         <BrandButton
                                             type="submit"
                                             disabled={loading}
                                             startIcon={loading ? <InlineLoader size={20} /> : <SaveIcon />}
+                                            onClick={(e) => {
+                                                // Prevent default form submission and handle manually
+                                                e.preventDefault();
+                                                handleSubmit(e);
+                                            }}
                                         >
                                             {loading ? 'Updating...' : 'Update Patient'}
                                         </BrandButton>
