@@ -32,7 +32,7 @@ const teamMembers: TeamMember[] = [
   { name: 'Cristian Torres', github: 'https://github.com/cristiantorresf19191919', role: 'Developers', gender: 'male', imageName: 'Cristian.jpeg' },
   { name: 'Vincent Bui', github: 'https://github.com/VincentBui0', linkedin: 'https://www.linkedin.com/in/vincent-bui0', role: 'Developers', gender: 'male', imageName: 'vincent.jpeg' },
   { name: 'Jessica Hackett', github: 'https://github.com/mooglemoxie0018', linkedin: 'https://www.linkedin.com/in/jessica-hackett/', role: 'UI/UX Designer', gender: 'female', imageName: 'Jessica.jpeg' },
-  { name: 'Ruth Igwe-Oruta', github: 'https://github.com/Xondacc', linkedin: 'https://www.linkedin.com/in/ruthigwe-oruta/', role: 'Product Owner', gender: 'female', imageName: 'Ruth.jpeg' },
+  { name: 'Ruth Igwe-Oruta', github: 'https://github.com/Xondacc', linkedin: 'https://www.linkedin.com/in/ruthigwe-oruta/', role: 'Product Owner', gender: 'female', imageName: 'Ruth.jpg' },
   { name: 'Dorene St.Marthe', github: 'https://github.com/Dorene-StMarthe/', linkedin: 'https://www.linkedin.com/in/dorenestmarthe/', role: 'Scrum Master', gender: 'female', imageName: 'Dorene.jpeg' },
 ];
 

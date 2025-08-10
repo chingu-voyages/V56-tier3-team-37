@@ -44,6 +44,7 @@ V56-tier3-team-37/
     │       └── page.tsx       # Add patient form (/add-patient)
     ├── components/            # Reusable UI components
     │   ├── Header.tsx         # Navigation header (BEM)
+    │   ├── MobileHeader.tsx   # Mobile navigation with animated hamburger
     │   └── Footer.tsx         # Footer component (BEM)
     └── lib/                   # Utility libraries
         ├── firebase.ts        # Firebase configuration (commented)
@@ -200,6 +201,69 @@ $spacing-lg: 1.5rem;
 - **Functions**: Color manipulation (darken, rgba)
 - **Media Queries**: Responsive breakpoints
 - **Animations**: Loading spinners and transitions
+
+## 📱 Mobile Header Component
+
+The project includes a dedicated `MobileHeader` component that provides an enhanced mobile navigation experience with smooth animations and modern UI patterns.
+
+### Features
+
+- **Animated Hamburger Menu**: Smooth 3-line to X transformation animation
+- **Circular Reveal Effect**: Menu opens with a circular clip-path animation from the hamburger button
+- **Role-Based Navigation**: Dynamic menu items based on user authentication and role
+- **Smooth Animations**: Staggered entrance animations for menu items using Framer Motion
+- **Responsive Design**: Automatically hidden on desktop (md: breakpoint and above)
+
+### Animation Details
+
+#### Hamburger Animation
+```tsx
+const burgerVariants = {
+  closed: { rotate: 0 },
+  open: { rotate: 180 },
+};
+
+const lineVariants = {
+  closed: { rotate: 0, y: 0 },
+  open: (i: number) => ({
+    rotate: i === 0 ? 45 : i === 1 ? -45 : 0,
+    y: i === 0 ? 6 : i === 1 ? -6 : 0,
+    opacity: i === 2 ? 0 : 1,
+  }),
+};
+```
+
+#### Circular Reveal Effect
+The mobile menu uses CSS `clip-path` with `ellipse()` to create a circular expansion animation:
+```tsx
+initial={{ clipPath: `ellipse(0px 0px at ${origin.x}px ${origin.y}px)` }}
+animate={{ clipPath: `ellipse(100vw 100vh at ${origin.x}px ${origin.y}px)` }}
+```
+
+### Usage
+
+The `MobileHeader` is automatically included in the root layout and works alongside the desktop `Header`:
+
+```tsx
+// In layout.tsx
+<Header />        // Desktop header (hidden on mobile)
+<MobileHeader />  // Mobile header (hidden on desktop)
+```
+
+### Navigation Items
+
+The mobile menu dynamically shows navigation items based on user authentication and role:
+
+- **Unauthenticated**: Login link, Care Flow, Patient Status
+- **Surgical Team**: All above + Update Patient Status
+- **Administrator**: All above + Patient Information (Add/Edit patients)
+
+### Styling
+
+- Uses the same teal color scheme (`#07BEB8`) as the desktop header
+- Material-UI icons for consistent visual language
+- Tailwind CSS for responsive utilities and animations
+- Framer Motion for smooth, performant animations
 
 ## 🛠️ Dependencies
 

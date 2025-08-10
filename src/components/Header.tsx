@@ -12,7 +12,9 @@ import {
   MenuItem,
   IconButton,
   Divider,
-  Chip
+  Chip,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -22,13 +24,19 @@ import {
   PushPin as PushPinIcon,
   Group as GroupIcon
 } from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import AnimatedHamburger from './AnimatedHamburger';
+import MobileMenu from './MobileMenu';
 
 export default function Header() {
   const { user, userRole, userInfo, logout } = useAuth();
   const router = useRouter();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const hamburgerRef = useRef<HTMLDivElement>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -68,6 +76,16 @@ export default function Header() {
       >
         {/* Left side - User Avatar and Navigation Items */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {/* Mobile Hamburger Menu - Only show on mobile */}
+          {isMobile && (
+            <Box ref={hamburgerRef}>
+              <AnimatedHamburger
+                isOpen={mobileMenuOpen}
+                onClick={() => setMobileMenuOpen(true)}
+              />
+            </Box>
+          )}
+
           {/* User Avatar - Moved to the left */}
           {user ? (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -243,87 +261,92 @@ export default function Header() {
             </Typography>
           )}
 
-          {/* Care Flow - Active Item */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography
-              component={Link}
-              href="/"
-              variant="body1"
-              sx={{
-                fontWeight: 600,
-                fontSize: '1rem',
-                color: 'white',
-                textDecoration: 'none',
-                '&:hover': {
-                  opacity: 0.9
-                }
-              }}
-            >
-              Care Flow
-            </Typography>
-          </Box>
+          {/* Desktop Navigation Items - Hidden on mobile */}
+          {!isMobile && (
+            <>
+              {/* Care Flow - Active Item */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography
+                  component={Link}
+                  href="/"
+                  variant="body1"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    color: 'white',
+                    textDecoration: 'none',
+                    '&:hover': {
+                      opacity: 0.9
+                    }
+                  }}
+                >
+                  Care Flow
+                </Typography>
+              </Box>
 
-          {/* Patient Status */}
-          <Typography
-            component={Link}
-            href="/status"
-            variant="body1"
-            sx={{
-              fontWeight: 500,
-              fontSize: '1rem',
-              color: 'white',
-              opacity: 0.9,
-              textDecoration: 'none',
-              '&:hover': {
-                opacity: 1
-              }
-            }}
-          >
-            Patient Status
-          </Typography>
+              {/* Patient Status */}
+              <Typography
+                component={Link}
+                href="/status"
+                variant="body1"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: '1rem',
+                  color: 'white',
+                  opacity: 0.9,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    opacity: 1
+                  }
+                }}
+              >
+                Patient Status
+              </Typography>
 
-          {/* Update Patient Status - Only show for authenticated users */}
-          {user && (userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM) && (
-            <Typography
-              component={Link}
-              href="/patients"
-              variant="body1"
-              sx={{
-                fontWeight: 500,
-                fontSize: '1rem',
-                color: 'white',
-                opacity: 0.9,
-                lineHeight: 1.2,
-                textDecoration: 'none',
-                '&:hover': {
-                  opacity: 1
-                }
-              }}
-            >
-              Update Patient<br />Status
-            </Typography>
-          )}
+              {/* Update Patient Status - Only show for authenticated users */}
+              {user && (userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM) && (
+                <Typography
+                  component={Link}
+                  href="/patients"
+                  variant="body1"
+                  sx={{
+                    fontWeight: 500,
+                    fontSize: '1rem',
+                    color: 'white',
+                    opacity: 0.9,
+                    lineHeight: 1.2,
+                    textDecoration: 'none',
+                    '&:hover': {
+                      opacity: 1
+                    }
+                  }}
+                >
+                  Update Patient<br />Status
+                </Typography>
+              )}
 
-          {/* Patient Information - Only show for Admin */}
-          {user && userRole === UserRole.ADMIN && (
-            <Typography
-              component={Link}
-              href="/add-patient"
-              variant="body1"
-              sx={{
-                fontWeight: 500,
-                fontSize: '1rem',
-                color: 'white',
-                opacity: 0.9,
-                lineHeight: 1.2,
-                textDecoration: 'none',
-                '&:hover': {
-                  opacity: 1
-                }
-              }}
-            >
-              Patient<br />Information
-            </Typography>
+              {/* Patient Information - Only show for Admin */}
+              {user && userRole === UserRole.ADMIN && (
+                <Typography
+                  component={Link}
+                  href="/add-patient"
+                  variant="body1"
+                  sx={{
+                    fontWeight: 500,
+                    fontSize: '1rem',
+                    color: 'white',
+                    opacity: 0.9,
+                    lineHeight: 1.2,
+                    textDecoration: 'none',
+                    '&:hover': {
+                      opacity: 1
+                    }
+                  }}
+                >
+                  Patient<br />Information
+                </Typography>
+              )}
+            </>
           )}
         </Box>
 
@@ -340,6 +363,13 @@ export default function Header() {
           {currentDate}
         </Typography>
       </Box>
+
+      {/* Mobile Menu Portal */}
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        triggerRef={hamburgerRef}
+      />
     </header>
   );
 } 
