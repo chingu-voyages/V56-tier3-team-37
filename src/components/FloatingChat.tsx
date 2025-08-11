@@ -28,6 +28,12 @@ interface Message {
     text: string;
     sender: 'user' | 'ai';
     timestamp: Date;
+    patientQuery?: {
+        query: string;
+        type: 'name' | 'id';
+        found: boolean;
+        resultType: 'single' | 'multiple' | null;
+    } | null;
 }
 
 export default function FloatingChat() {
@@ -36,7 +42,7 @@ export default function FloatingChat() {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            text: 'Hello! I\'m your AI assistant. How can I help you today?',
+            text: 'Hello! I\'m your AI assistant. I can help you with healthcare questions, surgery information, and even look up patient status by name or ID. How can I help you today?',
             sender: 'ai',
             timestamp: new Date()
         }
@@ -77,7 +83,8 @@ export default function FloatingChat() {
                 id: (Date.now() + 1).toString(),
                 text: data.response || 'I received your message! This is a placeholder response.',
                 sender: 'ai',
-                timestamp: new Date()
+                timestamp: new Date(),
+                patientQuery: data.patientQuery || null
             };
 
             setMessages(prev => [...prev, aiMessage]);
@@ -196,7 +203,7 @@ export default function FloatingChat() {
                                                 AI Assistant
                                             </Typography>
                                             <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                                Ask me anything!
+                                                Ask me anything! I can also look up patient status.
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -276,6 +283,28 @@ export default function FloatingChat() {
                                                         maxWidth: '100%',
                                                         wordBreak: 'break-word'
                                                     }}>
+                                                        {/* Patient Query Indicator */}
+                                                        {message.patientQuery && (
+                                                            <Box sx={{ 
+                                                                mb: 1, 
+                                                                p: 1, 
+                                                                backgroundColor: message.patientQuery.found ? '#D1FAE5' : '#FEE2E2',
+                                                                borderRadius: 1,
+                                                                border: `1px solid ${message.patientQuery.found ? '#10B981' : '#EF4444'}`
+                                                            }}>
+                                                                <Typography variant="caption" sx={{ 
+                                                                    fontWeight: 600,
+                                                                    color: message.patientQuery.found ? '#065F46' : '#991B1B'
+                                                                }}>
+                                                                    🔍 Patient Lookup: {message.patientQuery.query}
+                                                                    {message.patientQuery.found 
+                                                                        ? ` - ${message.patientQuery.resultType === 'single' ? 'Found' : 'Multiple matches'}`
+                                                                        : ' - Not found'
+                                                                    }
+                                                                </Typography>
+                                                            </Box>
+                                                        )}
+                                                        
                                                         <Typography variant="body1" sx={{
                                                             fontWeight: 500,
                                                             lineHeight: 1.5,
@@ -335,7 +364,7 @@ export default function FloatingChat() {
                                 <Box sx={{ display: 'flex', gap: 1 }}>
                                     <TextField
                                         fullWidth
-                                        placeholder="Type your message..."
+                                        placeholder="Type your message... (e.g., 'How is John Smith?' or 'Check status for ABC123')"
                                         value={inputMessage}
                                         onChange={(e) => setInputMessage(e.target.value)}
                                         onKeyPress={handleKeyPress}
