@@ -346,6 +346,25 @@ export default function Header() {
               >
                 Patient Status
               </Typography>
+
+              {/* Surgery Types Demo */}
+              <Typography
+                component={Link}
+                href="/surgery-types-demo"
+                variant="body1"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: '1rem',
+                  color: 'white',
+                  opacity: 0.9,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    opacity: 1
+                  }
+                }}
+              >
+                Surgery Types
+              </Typography>
             </>
           )}
         </Box>

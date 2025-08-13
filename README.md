@@ -45,11 +45,59 @@ V56-tier3-team-37/
     ├── components/            # Reusable UI components
     │   ├── Header.tsx         # Navigation header (BEM)
     │   ├── MobileHeader.tsx   # Mobile navigation with animated hamburger
-    │   └── Footer.tsx         # Footer component (BEM)
+    │   ├── Footer.tsx         # Footer component (BEM)
+    │   ├── SurgeryTypeAutocomplete.tsx # Standardized surgery types autocomplete
+    │   └── BrandButton.tsx    # Custom branded button component
     └── lib/                   # Utility libraries
         ├── firebase.ts        # Firebase configuration (commented)
-        └── auth-context.tsx   # Authentication context (mock)
+        ├── auth-context.tsx   # Authentication context (mock)
+        ├── surgery-types.ts   # Standardized surgery types and utilities
+        └── patient-service.ts # Patient data management service
 ```
+
+## 🏥 Standardized Surgery Types
+
+### Overview
+This application implements a comprehensive standardized surgery types system to ensure data consistency, eliminate errors, and improve patient safety.
+
+### Features
+- **60+ Standardized Procedures**: Comprehensive coverage across all major surgical specialties
+- **Smart Icon System**: Category-level icons with subtle procedure indicators for clean UX
+- **Autocomplete Functionality**: Real-time search with category grouping and descriptions
+- **Category Organization**: Logical grouping by medical specialty (Cardiac, Neurosurgery, Orthopedics, etc.)
+- **Common Aliases**: Includes alternative names and abbreviations for each procedure
+- **Validation**: Ensures only valid surgery types are entered into the system
+
+### Available Categories
+- **🫀 Cardiac & Cardiovascular**: CABG, Heart Valve Replacement, Angioplasty, Pacemaker Implantation
+- **🧠 Neurosurgery**: Craniotomy, Spinal Fusion, Laminectomy, Deep Brain Stimulation
+- **👁️ Ophthalmology**: Cataract Extraction, LASIK, Retinal Detachment Repair, Glaucoma Surgery
+- **🩺 General Surgery**: Appendectomy, Hernia Repair, Cholecystectomy, Gastrectomy, Colectomy
+- **🦴 Orthopedic Surgery**: Hip/Knee Replacement, Arthroscopy, Shoulder Surgery, Ankle Fusion
+- **🫁 Thoracic Surgery**: Lobectomy, Pneumonectomy, Mediastinoscopy, Esophagectomy
+- **🧍‍♂️ Urology**: Prostatectomy, Nephrectomy, Cystectomy, Ureteroscopy
+- **🫄 Obstetrics & Gynecology**: C-Section, Hysterectomy, Tubal Ligation, Myomectomy
+- **🧵 Plastic & Reconstructive**: Breast Reconstruction, Skin Grafts, Rhinoplasty, Blepharoplasty
+- **🩸 Vascular Surgery**: Carotid Endarterectomy, Peripheral Bypass, Varicose Vein Surgery
+- **👂 ENT Surgery**: Tonsillectomy, Adenoidectomy, Tympanoplasty, Septoplasty
+- **👶 Pediatric Surgery**: Circumcision, Inguinal Hernia Repair, Pyloromyotomy
+- **🔄 Transplant Surgery**: Kidney, Liver, Heart, and Lung Transplants
+- **🚨 Emergency Surgery**: Exploratory Laparotomy, Thoracotomy, Emergency Craniotomy
+
+### Implementation
+The autocomplete component is integrated into:
+- Edit Patient forms (`/edit-patient/[id]`)
+- Inline editing in Patients list (`/patients`)
+- Demo page (`/surgery-types-demo`)
+
+### Benefits
+✅ **Eliminates Errors**: No more typos or misspellings in medical terms  
+✅ **Ensures Consistency**: Standardized terminology across the organization  
+✅ **Improves Data Quality**: Better reporting and analytics capabilities  
+✅ **Saves Time**: Reduces manual typing with intelligent search  
+✅ **Enhances Safety**: Clear, unambiguous procedure names  
+✅ **Clean UX Design**: Category-level icons prevent visual clutter  
+✅ **Professional Appearance**: Medical-grade interface following UX best practices  
 
 ## 🎨 Material UI Theme & BEM Methodology
 
@@ -331,8 +379,14 @@ src/app/
 │   └── page.tsx              # /auth
 ├── patients/
 │   └── page.tsx              # /patients
-└── add-patient/
-    └── page.tsx              # /add-patient
+├── add-patient/
+│   └── page.tsx              # /add-patient
+├── edit-patient/
+│   └── [id]/
+│     ├── page.tsx            # /edit-patient/[id]
+│     └── EditPatientClient.tsx # Edit patient form component
+└── surgery-types-demo/
+    └── page.tsx              # /surgery-types-demo
 ```
 
 ### Key Routing Concepts

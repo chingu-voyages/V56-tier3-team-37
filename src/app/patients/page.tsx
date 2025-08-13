@@ -39,6 +39,7 @@ import {
 import BrandButton from '@/components/BrandButton';
 import BrandLoader from '@/components/BrandLoader';
 import InlineLoader from '@/components/InlineLoader';
+import SurgeryTypeAutocomplete from '@/components/SurgeryTypeAutocomplete';
 import {
   Add as AddIcon,
   Refresh as RefreshIcon,
@@ -318,25 +319,25 @@ function PatientsPageContent() {
   };
 
   const getStatusColor = (status: Patient['status']) => {
-      switch (status) {
-          case 'checked-in':
-              return 'checkin';
-          case 'pre-procedure':
-              return 'preprocedure';
-          case 'in-progress':
-              return 'inprogress';
-          case 'closing':
-              return 'closed';
-          case 'recovery':
-              return 'healing';
-          case 'complete':
-              return 'success';
-          case 'dismissal':
-              return 'dismissed';
-          default:
-              return 'default';
-        }
-    };
+    switch (status) {
+      case 'checked-in':
+        return 'checkin';
+      case 'pre-procedure':
+        return 'preprocedure';
+      case 'in-progress':
+        return 'inprogress';
+      case 'closing':
+        return 'closed';
+      case 'recovery':
+        return 'healing';
+      case 'complete':
+        return 'success';
+      case 'dismissal':
+        return 'dismissed';
+      default:
+        return 'default';
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -824,34 +825,34 @@ function PatientsPageContent() {
                                 fontWeight: 600,
                                 borderRadius: 1.5,
                                 fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                                  '&.MuiChip-colorCheckin': {
-                                    backgroundColor: '#737373',
-                                    color: 'white'
-                                  },
-                                  '&.MuiChip-colorPreprocedure': {
-                                    backgroundColor: '#4F81BD',
-                                    color: 'white'
-                                  },
-                                  '&.MuiChip-colorInprogress': {
-                                    backgroundColor: '#2B5CAA',
-                                    color: 'white'
-                                  },
-                                  '&.MuiChip-colorClosed': {
-                                    backgroundColor: '#E5B567',
-                                    color: 'white'
-                                  },
-                                  '&.MuiChip-colorHealing': {
-                                    backgroundColor: '#5AAE61',
-                                    color: 'white'
-                                  },
-                                  '&.MuiChip-colorSuccess': {
-                                    backgroundColor: '#1B7837',
-                                    color: 'white'
-                                  },
-                                  '&.MuiChip-colorDismissed': {
-                                    backgroundColor: '#1F9E89',
-                                    color: 'white'
-                                  }
+                                '&.MuiChip-colorCheckin': {
+                                  backgroundColor: '#737373',
+                                  color: 'white'
+                                },
+                                '&.MuiChip-colorPreprocedure': {
+                                  backgroundColor: '#4F81BD',
+                                  color: 'white'
+                                },
+                                '&.MuiChip-colorInprogress': {
+                                  backgroundColor: '#2B5CAA',
+                                  color: 'white'
+                                },
+                                '&.MuiChip-colorClosed': {
+                                  backgroundColor: '#E5B567',
+                                  color: 'white'
+                                },
+                                '&.MuiChip-colorHealing': {
+                                  backgroundColor: '#5AAE61',
+                                  color: 'white'
+                                },
+                                '&.MuiChip-colorSuccess': {
+                                  backgroundColor: '#1B7837',
+                                  color: 'white'
+                                },
+                                '&.MuiChip-colorDismissed': {
+                                  backgroundColor: '#1F9E89',
+                                  color: 'white'
+                                }
                               }}
                             />
                           </TableCell>
@@ -1125,30 +1126,19 @@ function PatientsPageContent() {
                 }}
               />
 
-              <TextField
-                fullWidth
-                label="Surgery Type *"
-                value={editFormData.surgeryType}
-                onChange={handleEditInputChange('surgeryType')}
+              <SurgeryTypeAutocomplete
+                value={editFormData.surgeryType || ''}
+                onChange={(value) => {
+                  setEditFormData(prev => ({ ...prev, surgeryType: value }));
+                  if (editErrors.surgeryType) {
+                    setEditErrors(prev => ({ ...prev, surgeryType: '' }));
+                  }
+                }}
                 error={!!editErrors.surgeryType}
                 helperText={editErrors.surgeryType}
                 required
                 disabled={editLoading}
-                size="small"
-                placeholder="e.g., Cardiac Surgery, Orthopedic Surgery, etc."
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': {
-                      borderColor: editErrors.surgeryType ? '#EF4444' : '#E5E7EB'
-                    },
-                    '&:hover fieldset': {
-                      borderColor: editErrors.surgeryType ? '#EF4444' : '#07BEB8'
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: editErrors.surgeryType ? '#EF4444' : '#07BEB8'
-                    }
-                  }
-                }}
+                placeholder="Search for surgery type..."
               />
 
               <TextField

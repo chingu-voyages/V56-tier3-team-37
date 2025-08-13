@@ -27,6 +27,7 @@ import RoleGuard from '@/components/RoleGuard';
 import BrandButton from '@/components/BrandButton';
 import BrandLoader from '@/components/BrandLoader';
 import InlineLoader from '@/components/InlineLoader';
+import SurgeryTypeAutocomplete from '@/components/SurgeryTypeAutocomplete';
 
 interface EditPatientClientProps {
     params: Promise<{ id: string }>;
@@ -394,30 +395,19 @@ export default function EditPatientClient({ params }: EditPatientClientProps) {
                                 </Box>
 
                                 <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
-                                    <TextField
-                                        fullWidth
-                                        label="Surgery Type"
-                                        value={formData.surgeryType}
-                                        onChange={handleInputChange('surgeryType')}
+                                    <SurgeryTypeAutocomplete
+                                        value={formData.surgeryType || ''}
+                                        onChange={(value) => {
+                                            setFormData(prev => ({ ...prev, surgeryType: value }));
+                                            if (errors.surgeryType) {
+                                                setErrors(prev => ({ ...prev, surgeryType: '' }));
+                                            }
+                                        }}
                                         error={!!errors.surgeryType}
                                         helperText={errors.surgeryType}
                                         required
                                         disabled={loading}
-                                        placeholder="e.g., Appendectomy, Heart Surgery"
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: '12px',
-                                                '& fieldset': {
-                                                    borderColor: '#E5E7EB',
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: '#07BEB8',
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#07BEB8',
-                                                },
-                                            },
-                                        }}
+                                        placeholder="Search for surgery type..."
                                     />
                                 </Box>
 
