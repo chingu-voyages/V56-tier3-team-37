@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Box,
@@ -49,6 +49,13 @@ export default function FloatingChat() {
     ]);
     const [inputMessage, setInputMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Sophisticated animation state management
+    const [animationState, setAnimationState] = useState<'idle' | 'pulse' | 'wave' | 'blink'>('idle');
+    const [isVisible, setIsVisible] = useState(false);
+    const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const visibilityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastUserActivityRef = useRef<number>(Date.now());
 
     const handleSendMessage = async () => {
         if (!inputMessage.trim()) return;
@@ -111,6 +118,97 @@ export default function FloatingChat() {
         }
     };
 
+    // Sophisticated periodic animation system
+    useEffect(() => {
+        const updateUserActivity = () => {
+            lastUserActivityRef.current = Date.now();
+        };
+
+        // Track user activity
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(event => {
+            document.addEventListener(event, updateUserActivity);
+        });
+
+        // Periodic animation logic
+        const scheduleNextAnimation = () => {
+            if (animationTimeoutRef.current) {
+                clearTimeout(animationTimeoutRef.current);
+            }
+
+            // Calculate time since last user activity
+            const timeSinceActivity = Date.now() - lastUserActivityRef.current;
+            const isUserInactive = timeSinceActivity > 180000; // 3 minutes
+
+            // Determine next animation based on context
+            let nextAnimationDelay: number;
+            let nextAnimation: 'pulse' | 'wave' | 'blink';
+
+            if (isUserInactive) {
+                // User inactive - more frequent, engaging animations
+                nextAnimationDelay = 30000 + Math.random() * 30000; // 30-60 seconds
+                nextAnimation = Math.random() > 0.7 ? 'wave' : 'pulse';
+            } else {
+                // User active - subtle, professional animations
+                nextAnimationDelay = 60000 + Math.random() * 60000; // 60-120 seconds
+                nextAnimation = Math.random() > 0.8 ? 'blink' : 'pulse';
+            }
+
+            animationTimeoutRef.current = setTimeout(() => {
+                if (isVisible && !drawerOpen) {
+                    setAnimationState(nextAnimation);
+
+                    // Reset to idle after animation
+                    setTimeout(() => setAnimationState('idle'), 2000);
+
+                    // Schedule next animation
+                    scheduleNextAnimation();
+                } else {
+                    // If not visible or drawer open, try again later
+                    scheduleNextAnimation();
+                }
+            }, nextAnimationDelay);
+        };
+
+        // Start animation cycle
+        scheduleNextAnimation();
+
+        // Cleanup
+        return () => {
+            events.forEach(event => {
+                document.removeEventListener(event, updateUserActivity);
+            });
+            if (animationTimeoutRef.current) {
+                clearTimeout(animationTimeoutRef.current);
+            }
+        };
+    }, [isVisible, drawerOpen]);
+
+    // Visibility detection for smart animations
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setIsVisible(entry.isIntersecting);
+
+                // Welcome animation when becoming visible
+                if (entry.isIntersecting && !drawerOpen) {
+                    setTimeout(() => {
+                        setAnimationState('pulse');
+                        setTimeout(() => setAnimationState('idle'), 2000);
+                    }, 1000);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        const buttonElement = document.querySelector('[data-robot-button]');
+        if (buttonElement) {
+            observer.observe(buttonElement);
+        }
+
+        return () => observer.disconnect();
+    }, [drawerOpen]);
+
     const toggleMaximize = () => {
         setIsMaximized(!isMaximized);
     };
@@ -119,6 +217,7 @@ export default function FloatingChat() {
         <>
             {/* Floating Chat Button */}
             <motion.div
+                data-robot-button
                 style={{
                     position: 'fixed',
                     bottom: 100, // Above the footer
@@ -127,6 +226,48 @@ export default function FloatingChat() {
                 }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                animate={animationState}
+                variants={{
+                    idle: {
+                        scale: 1,
+                        rotate: 0,
+                        filter: 'brightness(1)',
+                        transition: { duration: 0.5, ease: 'easeInOut' }
+                    },
+                    pulse: {
+                        scale: [1, 1.05, 1],
+                        filter: ['brightness(1)', 'brightness(1.2)', 'brightness(1)'],
+                        boxShadow: [
+                            '0 4px 20px rgba(7, 190, 184, 0.3)',
+                            '0 6px 30px rgba(7, 190, 184, 0.5)',
+                            '0 4px 20px rgba(7, 190, 184, 0.3)'
+                        ],
+                        transition: {
+                            duration: 2,
+                            ease: 'easeInOut',
+                            times: [0, 0.5, 1]
+                        }
+                    },
+                    wave: {
+                        rotate: [0, -5, 5, -5, 0],
+                        scale: [1, 1.02, 1.02, 1.02, 1],
+                        transition: {
+                            duration: 2,
+                            ease: 'easeInOut',
+                            times: [0, 0.2, 0.5, 0.8, 1]
+                        }
+                    },
+                    blink: {
+                        scale: [1, 1.02, 1],
+                        filter: ['brightness(1)', 'brightness(1.1)', 'brightness(1)'],
+                        transition: {
+                            duration: 1.5,
+                            ease: 'easeInOut',
+                            times: [0, 0.3, 1]
+                        }
+                    }
+                }}
+
             >
                 <IconButton
                     onClick={() => setDrawerOpen(true)}
@@ -136,11 +277,6 @@ export default function FloatingChat() {
                         backgroundColor: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
                         background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
                         color: 'white',
-                        boxShadow: '0 4px 20px rgba(7, 190, 184, 0.3)',
-                        '&:hover': {
-                            background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)',
-                            boxShadow: '0 6px 25px rgba(7, 190, 184, 0.4)',
-                        },
                         transition: 'all 0.3s ease'
                     }}
                 >
@@ -285,26 +421,26 @@ export default function FloatingChat() {
                                                     }}>
                                                         {/* Patient Query Indicator */}
                                                         {message.patientQuery && (
-                                                            <Box sx={{ 
-                                                                mb: 1, 
-                                                                p: 1, 
+                                                            <Box sx={{
+                                                                mb: 1,
+                                                                p: 1,
                                                                 backgroundColor: message.patientQuery.found ? '#D1FAE5' : '#FEE2E2',
                                                                 borderRadius: 1,
                                                                 border: `1px solid ${message.patientQuery.found ? '#10B981' : '#EF4444'}`
                                                             }}>
-                                                                <Typography variant="caption" sx={{ 
+                                                                <Typography variant="caption" sx={{
                                                                     fontWeight: 600,
                                                                     color: message.patientQuery.found ? '#065F46' : '#991B1B'
                                                                 }}>
                                                                     🔍 Patient Lookup: {message.patientQuery.query}
-                                                                    {message.patientQuery.found 
+                                                                    {message.patientQuery.found
                                                                         ? ` - ${message.patientQuery.resultType === 'single' ? 'Found' : 'Multiple matches'}`
                                                                         : ' - Not found'
                                                                     }
                                                                 </Typography>
                                                             </Box>
                                                         )}
-                                                        
+
                                                         <Typography variant="body1" sx={{
                                                             fontWeight: 500,
                                                             lineHeight: 1.5,
