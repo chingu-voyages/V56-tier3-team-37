@@ -25,6 +25,7 @@ import RoleGuard from '@/components/RoleGuard';
 import BrandButton from '@/components/BrandButton';
 import BrandLoader from '@/components/BrandLoader';
 import InlineLoader from '@/components/InlineLoader';
+import SurgeryTypeAutocomplete from '@/components/SurgeryTypeAutocomplete';
 
 // Patient number generation is now handled automatically by the patient service
 
@@ -45,6 +46,8 @@ export default function AddPatientPage() {
     email: '',
     phone: '',
     patientId: '',
+    surgeryType: '',
+    surgeryDate: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -120,6 +123,21 @@ export default function AddPatientPage() {
       }
     }
 
+    // Surgery Type validation
+    if (!formData.surgeryType?.trim()) {
+      newErrors.surgeryType = 'Surgery Type is required';
+    }
+
+    // Surgery Date validation (optional but if provided, must not be in the past)
+    if (formData.surgeryDate?.trim()) {
+      const surgeryDate = new Date(formData.surgeryDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day
+      if (surgeryDate < today) {
+        newErrors.surgeryDate = 'Surgery Date cannot be in the past';
+      }
+    }
+
     return newErrors;
   };
 
@@ -169,6 +187,8 @@ export default function AddPatientPage() {
         email: '',
         phone: '',
         patientId: '',
+        surgeryType: '',
+        surgeryDate: '',
       });
 
       // Redirect after a short delay
@@ -436,6 +456,54 @@ export default function AddPatientPage() {
                       helperText={errors.email}
                       required
                       disabled={loading}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '12px',
+                          '& fieldset': {
+                            borderColor: '#E5E7EB',
+                          },
+                          '&:hover fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#07BEB8',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Surgery Type */}
+                  <Box sx={{ flex: '1 1 100%' }}>
+                    <SurgeryTypeAutocomplete
+                      value={formData.surgeryType || ''}
+                      onChange={(value) => {
+                        setFormData(prev => ({ ...prev, surgeryType: value }));
+                        if (errors.surgeryType) {
+                          setErrors(prev => ({ ...prev, surgeryType: '' }));
+                        }
+                      }}
+                      error={!!errors.surgeryType}
+                      helperText={errors.surgeryType}
+                      required
+                      disabled={loading}
+                      placeholder="Search for surgery type..."
+                    />
+                  </Box>
+
+                  {/* Surgery Date */}
+                  <Box sx={{ flex: '1 1 300px', minWidth: 0 }}>
+                    <TextField
+                      fullWidth
+                      label="Surgery Date"
+                      type="date"
+                      name="surgeryDate"
+                      value={formData.surgeryDate}
+                      onChange={handleChange}
+                      error={!!errors.surgeryDate}
+                      helperText={errors.surgeryDate}
+                      disabled={loading}
+                      InputLabelProps={{ shrink: true }}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '12px',
