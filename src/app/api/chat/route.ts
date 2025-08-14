@@ -42,14 +42,13 @@ Your responses should be helpful, accurate, and comforting while maintaining app
 function extractPatientQuery(message: string): { type: 'name' | 'id' | null; query: string | null } {
   const messageLower = message.toLowerCase();
   
-  // Check for patient ID patterns (6-character alphanumeric)
-  const patientIdMatch = message.match(/\b[A-Z0-9]{6}\b/i);
-  if (patientIdMatch) {
-    return { type: 'id', query: patientIdMatch[0].toUpperCase() };
-  }
-  
-  // Check for patient name patterns
+  // Check for patient name patterns FIRST - improved to catch more natural language
   const namePatterns = [
+    // Direct name mentions (most common case) - check this first
+    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/,
+    // Natural language patterns
+    /(?:how is|how's)\s+([a-zA-Z\s]+)\s+(?:doing|feeling|recovering)/i,
+    /(?:tell me about|give me info on|info about)\s+([a-zA-Z\s]+)/i,
     /(?:patient|surgery|status)\s+(?:for|of|about)\s+([a-zA-Z\s]+)/i,
     /(?:how is|what is the status of|check status for)\s+([a-zA-Z\s]+)/i,
     /(?:look up|find|search for)\s+([a-zA-Z\s]+)/i
@@ -58,10 +57,32 @@ function extractPatientQuery(message: string): { type: 'name' | 'id' | null; que
   for (const pattern of namePatterns) {
     const match = message.match(pattern);
     if (match && match[1]) {
-      const name = match[1].trim();
+      let name = match[1].trim();
+      
+      // Clean up the name by removing common prefixes/suffixes
+      name = name.replace(/^(patient|surgery|status|check|look|find|search|info|about|for|of|on)\s+/i, '');
+      name = name.replace(/\s+(patient|surgery|status|check|look|find|search|info|about|for|of|on)$/i, '');
+      
       if (name.length > 1) {
         return { type: 'name', query: name };
       }
+    }
+  }
+  
+  // Check for patient ID patterns (6-character alphanumeric) - only if no name found
+  // Make it more specific to avoid matching parts of names
+  const patientIdMatch = message.match(/\b[A-Z0-9]{6}\b/i);
+  if (patientIdMatch) {
+    // Double-check that this isn't part of a name
+    const beforeMatch = message.substring(0, message.indexOf(patientIdMatch[0]));
+    const afterMatch = message.substring(message.indexOf(patientIdMatch[0]) + 6);
+    
+    // If there are letters before or after, it's likely part of a name
+    const hasLettersBefore = /\b[a-zA-Z]+\s*$/.test(beforeMatch);
+    const hasLettersAfter = /^\s*[a-zA-Z]+\b/.test(afterMatch);
+    
+    if (!hasLettersBefore && !hasLettersAfter) {
+      return { type: 'id', query: patientIdMatch[0].toUpperCase() };
     }
   }
   
@@ -77,14 +98,42 @@ async function searchPatientData(searchTerm: string, searchType: 'name' | 'id'):
       const patient = patients.find(p => p.patientId === searchTerm);
       return patient ? { found: true, patient, type: 'single' } : { found: false };
     } else {
-      // Search by name
+      // Search by name - improved matching logic
       const patients = await patientService.getPatients();
+      const searchLower = searchTerm.toLowerCase().trim();
+      
       const matchingPatients = patients.filter(p => {
-        const fullName = `${p.firstName || ''} ${p.lastName || ''}`.toLowerCase();
+        // Check multiple name combinations
+        const firstName = (p.firstName || '').toLowerCase();
+        const lastName = (p.lastName || '').toLowerCase();
         const legacyName = (p.name || '').toLowerCase();
-        const searchLower = searchTerm.toLowerCase();
         
-        return fullName.includes(searchLower) || legacyName.includes(searchLower);
+        // Full name combinations
+        const fullName = `${firstName} ${lastName}`.trim();
+        const reverseFullName = `${lastName} ${firstName}`.trim();
+        
+        // Split search term into words for better matching
+        const searchWords = searchLower.split(/\s+/).filter(word => word.length > 0);
+        
+        // Check if search term matches any part of the name
+        const exactMatches = (
+          fullName.includes(searchLower) ||
+          reverseFullName.includes(searchLower) ||
+          legacyName.includes(searchLower) ||
+          firstName.includes(searchLower) ||
+          lastName.includes(searchLower)
+        );
+        
+        // Check if individual words match
+        const wordMatches = searchWords.some(word => 
+          fullName.includes(word) ||
+          reverseFullName.includes(word) ||
+          legacyName.includes(word) ||
+          firstName.includes(word) ||
+          lastName.includes(word)
+        );
+        
+        return exactMatches || wordMatches;
       });
       
       if (matchingPatients.length === 0) {
@@ -164,6 +213,24 @@ The search for "${patientQuery.query}" did not return any results. Politely info
     if (patientQuery.query) {
       console.log('Patient query detected:', patientQuery);
       console.log('Patient data found:', patientData);
+      
+      // Additional debug logging for patient search
+      if (patientQuery.type === 'name') {
+        const allPatients = await patientService.getPatients();
+        console.log('All patients in database:', allPatients.map(p => ({
+          id: p.id,
+          name: p.name,
+          firstName: p.firstName,
+          lastName: p.lastName,
+          patientId: p.patientId,
+          status: p.status
+        })));
+        console.log('Search term:', patientQuery.query);
+        
+        // Test the search function directly
+        const testSearch = await searchPatientData(patientQuery.query, patientQuery.type);
+        console.log('Direct search test result:', testSearch);
+      }
     }
 
     try {

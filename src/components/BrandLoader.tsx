@@ -24,7 +24,17 @@ export default function BrandLoader({
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         backdropFilter: 'blur(4px)',
         zIndex: 9999,
-    } : {};
+    } : {
+        position: 'fixed' as const,
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 9999,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderRadius: '16px',
+        padding: '24px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    };
 
     return (
         <motion.div
@@ -42,7 +52,7 @@ export default function BrandLoader({
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    minHeight: fullScreen ? '100vh' : '200px',
+                    minHeight: fullScreen ? '100vh' : 'auto',
                     ...containerStyle
                 }}
             >
