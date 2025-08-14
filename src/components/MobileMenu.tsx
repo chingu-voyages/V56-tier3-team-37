@@ -19,7 +19,8 @@ import {
     Home as HomeIcon,
     Timeline as TimelineIcon,
     Update as UpdateIcon,
-    PersonAdd as PersonAddIcon
+    PersonAdd as PersonAddIcon,
+    SmartToy as ChatbotIcon
 } from '@mui/icons-material';
 import { useAuth } from '@/lib/auth-context';
 import { UserRole } from '@/lib/user-roles';
@@ -36,7 +37,8 @@ const menuItems = [
     { href: '/', label: 'Care Flow', icon: HomeIcon, isActive: true },
     { href: '/patients', label: 'Dashboard', icon: TimelineIcon, surgicalTeamOnly: true },
     { href: '/add-patient', label: 'Add Patient', icon: PersonAddIcon, adminOnly: true },
-    { href: '/status', label: 'Patient Status', icon: UpdateIcon }
+    { href: '/status', label: 'Patient Status', icon: UpdateIcon },
+    { href: '/chatbot-demo', label: 'Chatbot Demo', icon: ChatbotIcon }
 ];
 
 export default function MobileMenu({ isOpen, onClose, triggerRef }: MobileMenuProps) {
