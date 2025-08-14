@@ -371,13 +371,19 @@ function PatientsPageContent() {
         <Box sx={{
           background: 'white',
           borderRadius: 3,
-          p: 4,
+          p: isMobile ? 3 : 4,
           mb: 4,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
           border: '1px solid rgba(7, 190, 184, 0.1)'
         }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: isMobile ? 'flex-start' : 'center',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? 3 : 0
+          }}>
+            <Box sx={{ flex: 1 }}>
               <Typography
                 variant="h3"
                 component="h1"
@@ -385,7 +391,8 @@ function PatientsPageContent() {
                   fontWeight: 700,
                   color: '#1F2937',
                   mb: 1,
-                  fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                  fontSize: isMobile ? '2rem' : '2.125rem'
                 }}
               >
                 Patient Management
@@ -395,13 +402,18 @@ function PatientsPageContent() {
                 color="text.secondary"
                 sx={{
                   fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                  fontSize: '1.1rem'
+                  fontSize: isMobile ? '1rem' : '1.1rem'
                 }}
               >
                 Manage and monitor patient information and surgery status
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{
+              display: 'flex',
+              gap: 2,
+              flexDirection: isMobile ? 'column' : 'row',
+              width: isMobile ? '100%' : 'auto'
+            }}>
               <BrandButton
                 startIcon={<RefreshIcon />}
                 onClick={fetchPatients}
@@ -410,7 +422,9 @@ function PatientsPageContent() {
                   background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
                   '&:hover': {
                     background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)'
-                  }
+                  },
+                  width: isMobile ? '100%' : 'auto',
+                  minWidth: isMobile ? 'auto' : '120px'
                 }}
               >
                 Refresh
@@ -419,6 +433,10 @@ function PatientsPageContent() {
                 startIcon={<AddIcon />}
                 component={Link}
                 href="/add-patient"
+                sx={{
+                  width: isMobile ? '100%' : 'auto',
+                  minWidth: isMobile ? 'auto' : '140px'
+                }}
               >
                 Add Patient
               </BrandButton>
