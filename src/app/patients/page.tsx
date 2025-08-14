@@ -34,7 +34,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Tooltip
+  Tooltip,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import BrandButton from '@/components/BrandButton';
 import BrandLoader from '@/components/BrandLoader';
@@ -48,7 +50,11 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
   FilterList as FilterIcon,
-  Update as UpdateIcon
+  Update as UpdateIcon,
+  Phone as PhoneIcon,
+  Email as EmailIcon,
+  CalendarToday as CalendarIcon,
+  LocationOn as LocationIcon
 } from '@mui/icons-material';
 
 function PatientsPageContent() {
@@ -60,6 +66,10 @@ function PatientsPageContent() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Responsive design
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -525,38 +535,57 @@ function PatientsPageContent() {
                 Quickly locate patients to update their surgery status
               </Typography>
 
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+              <Box sx={{
+                display: 'flex',
+                gap: 2,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
                 <TextField
                   label="Last Name"
                   placeholder="Enter last name to search..."
                   value={lastNameSearch}
                   onChange={(e) => setLastNameSearch(e.target.value)}
-                  sx={{ flex: '1 1 300px', minWidth: 0 }}
+                  sx={{
+                    flex: isMobile ? 'none' : '1 1 300px',
+                    width: isMobile ? '100%' : 'auto',
+                    minWidth: 0
+                  }}
                   size="small"
                 />
 
-                <BrandButton
-                  startIcon={<SearchIcon />}
-                  onClick={() => {
-                    // Search is already active via onChange, this button provides visual feedback
-                  }}
-                >
-                  Search
-                </BrandButton>
+                <Box sx={{
+                  display: 'flex',
+                  gap: 2,
+                  width: isMobile ? '100%' : 'auto',
+                  justifyContent: isMobile ? 'space-between' : 'flex-start'
+                }}>
+                  <BrandButton
+                    startIcon={<SearchIcon />}
+                    onClick={() => {
+                      // Search is already active via onChange, this button provides visual feedback
+                    }}
+                    sx={{ flex: isMobile ? 1 : 'none' }}
+                  >
+                    Search
+                  </BrandButton>
 
-                <BrandButton
-                  onClick={() => {
-                    setLastNameSearch('');
-                  }}
-                  sx={{
-                    background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)'
-                    }
-                  }}
-                >
-                  Clear
-                </BrandButton>
+                  <BrandButton
+                    onClick={() => {
+                      setLastNameSearch('');
+                    }}
+                    sx={{
+                      background: 'linear-gradient(135deg, #07BEB8 0%, #3DCCC7 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #059B96 0%, #07BEB8 100%)'
+                      },
+                      flex: isMobile ? 1 : 'none'
+                    }}
+                  >
+                    Clear
+                  </BrandButton>
+                </Box>
               </Box>
 
               {lastNameSearch && (
@@ -579,7 +608,12 @@ function PatientsPageContent() {
                 Advanced Search & Filters
               </Typography>
 
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{
+                display: 'flex',
+                gap: 2,
+                flexWrap: 'wrap',
+                flexDirection: isMobile ? 'column' : 'row'
+              }}>
                 <TextField
                   placeholder="Search by name, email, phone, or surgery type..."
                   value={searchTerm}
@@ -587,71 +621,101 @@ function PatientsPageContent() {
                   InputProps={{
                     startAdornment: <SearchIcon sx={{ color: '#6B7280', mr: 1 }} />
                   }}
-                  sx={{ flex: '1 1 300px', minWidth: 0 }}
+                  sx={{
+                    flex: isMobile ? 'none' : '1 1 300px',
+                    width: isMobile ? '100%' : 'auto',
+                    minWidth: 0
+                  }}
                   size="small"
                 />
 
-                <FormControl sx={{ minWidth: 150 }} size="small">
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={statusFilter}
-                    label="Status"
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <MenuItem value="all">All Statuses</MenuItem>
-                    <MenuItem value="checked-in">Checked In</MenuItem>
-                    <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
-                    <MenuItem value="in-progress">In Progress</MenuItem>
-                    <MenuItem value="closing">Closing</MenuItem>
-                    <MenuItem value="recovery">Recovery</MenuItem>
-                    <MenuItem value="completed">Completed</MenuItem>
-                    <MenuItem value="dismissal">Dismissal</MenuItem>
-                  </Select>
-                </FormControl>
+                <Box sx={{
+                  display: 'flex',
+                  gap: 2,
+                  flexWrap: 'wrap',
+                  width: isMobile ? '100%' : 'auto'
+                }}>
+                  <FormControl sx={{
+                    minWidth: isMobile ? '100%' : 150,
+                    width: isMobile ? '100%' : 'auto'
+                  }} size="small">
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      value={statusFilter}
+                      label="Status"
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                      <MenuItem value="all">All Statuses</MenuItem>
+                      <MenuItem value="checked-in">Checked In</MenuItem>
+                      <MenuItem value="pre-procedure">Pre-Procedure</MenuItem>
+                      <MenuItem value="in-progress">In Progress</MenuItem>
+                      <MenuItem value="closing">Closing</MenuItem>
+                      <MenuItem value="recovery">Recovery</MenuItem>
+                      <MenuItem value="completed">Completed</MenuItem>
+                      <MenuItem value="dismissal">Dismissal</MenuItem>
+                    </Select>
+                  </FormControl>
 
-                <FormControl sx={{ minWidth: 180 }} size="small">
-                  <InputLabel>Surgery Type</InputLabel>
-                  <Select
-                    value={surgeryTypeFilter}
-                    label="Surgery Type"
-                    onChange={(e) => setSurgeryTypeFilter(e.target.value)}
-                  >
-                    <MenuItem value="all">All Types</MenuItem>
-                    {uniqueSurgeryTypes.map(type => (
-                      <MenuItem key={type} value={type}>{type}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                  <FormControl sx={{
+                    minWidth: isMobile ? '100%' : 180,
+                    width: isMobile ? '100%' : 'auto'
+                  }} size="small">
+                    <InputLabel>Surgery Type</InputLabel>
+                    <Select
+                      value={surgeryTypeFilter}
+                      label="Surgery Type"
+                      onChange={(e) => setSurgeryTypeFilter(e.target.value)}
+                    >
+                      <MenuItem value="all">All Types</MenuItem>
+                      {uniqueSurgeryTypes.map(type => (
+                        <MenuItem key={type} value={type}>{type}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
 
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    setSearchTerm('');
-                    setLastNameSearch('');
-                    setStatusFilter('all');
-                    setSurgeryTypeFilter('all');
-                  }}
-                  sx={{ color: '#6B7280', borderColor: '#6B7280' }}
-                >
-                  Clear Filters
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={generatePatientNumbersForExisting}
-                  disabled={generatingNumbers}
-                  startIcon={generatingNumbers ? <InlineLoader size={16} /> : <UpdateIcon />}
-                  sx={{
-                    background: 'linear-gradient(135deg, #07BEB8 0%, #059669 100%)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
-                    },
-                    '&:disabled': {
-                      background: '#9CA3AF'
-                    }
-                  }}
-                >
-                  {generatingNumbers ? 'Generating...' : 'Generate Patient Numbers'}
-                </Button>
+                <Box sx={{
+                  display: 'flex',
+                  gap: 2,
+                  flexWrap: 'wrap',
+                  width: isMobile ? '100%' : 'auto',
+                  justifyContent: isMobile ? 'space-between' : 'flex-start'
+                }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setLastNameSearch('');
+                      setStatusFilter('all');
+                      setSurgeryTypeFilter('all');
+                    }}
+                    sx={{
+                      color: '#6B7280',
+                      borderColor: '#6B7280',
+                      flex: isMobile ? 1 : 'none'
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={generatePatientNumbersForExisting}
+                    disabled={generatingNumbers}
+                    startIcon={generatingNumbers ? <InlineLoader size={16} /> : <UpdateIcon />}
+                    sx={{
+                      background: 'linear-gradient(135deg, #07BEB8 0%, #059669 100%)',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                      },
+                      '&:disabled': {
+                        background: '#9CA3AF'
+                      },
+                      flex: isMobile ? 1 : 'none'
+                    }}
+                  >
+                    {generatingNumbers ? 'Generating...' : 'Generate Patient Numbers'}
+                  </Button>
+                </Box>
               </Box>
 
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
@@ -659,163 +723,352 @@ function PatientsPageContent() {
               </Typography>
             </Box>
 
-            {/* Patients Table */}
-            <MuiPaper sx={{
-              overflow: 'hidden',
-              borderRadius: 3,
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            {/* View Toggle Info */}
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              mt: 2,
+              p: 2,
+              backgroundColor: 'rgba(7, 190, 184, 0.05)',
+              borderRadius: 2,
               border: '1px solid rgba(7, 190, 184, 0.1)'
             }}>
-              <TableContainer>
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: 'rgba(7, 190, 184, 0.05)' }}>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+              <FilterIcon sx={{ color: '#07BEB8', fontSize: 20 }} />
+              <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'var(--font-roboto), Roboto, sans-serif' }}>
+                {isMobile ? 'Mobile Cards View' : 'Desktop Table View'} • All search and filter functionality is maintained across both views
+              </Typography>
+            </Box>
+
+            {/* Patients Table - Desktop Only */}
+            {!isMobile && (
+              <MuiPaper sx={{
+                overflow: 'hidden',
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(7, 190, 184, 0.1)'
+              }}>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: 'rgba(7, 190, 184, 0.05)' }}>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                        }}>
+                          Name
+                        </TableCell>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                        }}>
+                          Patient Number
+                        </TableCell>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                        }}>
+                          Email
+                        </TableCell>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                        }}>
+                          Phone
+                        </TableCell>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                        }}>
+                          Surgery Type
+                        </TableCell>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                        }}>
+                          Surgery Date
+                        </TableCell>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                        }}>
+                          Status
+                        </TableCell>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
+                        }}>
+                          Created
+                        </TableCell>
+                        <TableCell sx={{
+                          fontWeight: 600,
+                          color: '#1F2937',
+                          fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                          fontSize: '0.95rem',
+                          borderBottom: '2px solid rgba(7, 190, 184, 0.2)',
+                          textAlign: 'center'
+                        }}>
+                          Actions
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      <AnimatePresence>
+                        {filteredPatients.map((patient, index) => (
+                          <motion.tr
+                            key={patient.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{
+                              duration: 0.3,
+                              delay: index * 0.05,
+                              ease: [0.25, 0.46, 0.45, 0.94]
+                            }}
+                            whileHover={{
+                              backgroundColor: 'rgba(7, 190, 184, 0.05)',
+                              scale: 1.001,
+                              transition: { duration: 0.2 }
+                            }}
+                            style={{
+                              backgroundColor: index % 2 === 0 ? 'white' : 'rgba(7, 190, 184, 0.02)'
+                            }}
+                          >
+                            <TableCell sx={{
+                              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                              fontWeight: 500
+                            }}>
+                              <Typography variant="body2" fontWeight="600" color="#1F2937">
+                                {patient.name}
+                              </Typography>
+                            </TableCell>
+                            <TableCell sx={{
+                              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                              color: '#6B7280',
+                              fontWeight: 500
+                            }}>
+                              {patient.patientId || 'N/A'}
+                            </TableCell>
+                            <TableCell sx={{
+                              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                              color: '#6B7280'
+                            }}>
+                              {patient.email}
+                            </TableCell>
+                            <TableCell sx={{
+                              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                              color: '#6B7280'
+                            }}>
+                              {patient.phone}
+                            </TableCell>
+                            <TableCell sx={{
+                              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                              fontWeight: 500
+                            }}>
+                              {patient.surgeryType || 'N/A'}
+                            </TableCell>
+                            <TableCell sx={{
+                              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                              color: '#6B7280'
+                            }}>
+                              {patient.surgeryDate ? formatDate(patient.surgeryDate) : 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={(patient.status || 'checked-in').replace('-', ' ')}
+                                color={getStatusColor(patient.status || 'checked-in')}
+                                size="small"
+                                sx={{
+                                  textTransform: 'capitalize',
+                                  fontWeight: 600,
+                                  borderRadius: 1.5,
+                                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                  '&.MuiChip-colorCheckin': {
+                                    backgroundColor: '#737373',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorPreprocedure': {
+                                    backgroundColor: '#4F81BD',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorInprogress': {
+                                    backgroundColor: '#2B5CAA',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorClosed': {
+                                    backgroundColor: '#E5B567',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorHealing': {
+                                    backgroundColor: '#5AAE61',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorSuccess': {
+                                    backgroundColor: '#1B7837',
+                                    color: 'white'
+                                  },
+                                  '&.MuiChip-colorDismissed': {
+                                    backgroundColor: '#1F9E89',
+                                    color: 'white'
+                                  }
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{
+                              fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                              color: '#6B7280',
+                              fontSize: '0.875rem'
+                            }}>
+                              {patient.createdAt instanceof Date
+                                ? formatDate(patient.createdAt.toDate().toISOString())
+                                : formatDate(patient.createdAt.toDate().toISOString())
+                              }
+                            </TableCell>
+                            <TableCell sx={{ textAlign: 'center' }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                                <Tooltip title="Update Patient Status" arrow>
+                                  <IconButton
+                                    onClick={() => handleEditPatient(patient)}
+                                    disabled={!patient.id}
+                                    sx={{
+                                      color: '#07BEB8',
+                                      '&:hover': {
+                                        backgroundColor: 'rgba(7, 190, 184, 0.1)',
+                                        transform: 'scale(1.1)'
+                                      },
+                                      transition: 'all 0.3s ease'
+                                    }}
+                                    aria-label={`Update status for ${patient.name}`}
+                                  >
+                                    <UpdateIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Edit Patient Details" arrow>
+                                  <IconButton
+                                    component={Link}
+                                    href={`/edit-patient/${patient.id}`}
+                                    disabled={!patient.id}
+                                    sx={{
+                                      color: '#059669',
+                                      '&:hover': {
+                                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                        transform: 'scale(1.1)'
+                                      },
+                                      transition: 'all 0.3s ease'
+                                    }}
+                                    aria-label={`Edit details for ${patient.name}`}
+                                  >
+                                    <EditIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <IconButton
+                                  component={Link}
+                                  href={`/delete-patient?id=${patient.id}`}
+                                  disabled={!patient.id}
+                                  sx={{
+                                    color: '#EF4444',
+                                    '&:hover': {
+                                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                      transform: 'scale(1.1)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                  }}
+                                  aria-label={`Delete ${patient.name}`}
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Box>
+                            </TableCell>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </MuiPaper>
+            )}
+
+            {/* Mobile Cards View */}
+            {isMobile && (
+              <Box sx={{ mt: 4 }}>
+                <AnimatePresence>
+                  {filteredPatients.map((patient, index) => (
+                    <motion.div
+                      key={patient.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{
+                        duration: 0.3,
+                        delay: index * 0.05,
+                        ease: [0.25, 0.46, 0.45, 0.94]
+                      }}
+                      style={{ marginBottom: '16px' }}
+                    >
+                      <Card sx={{
+                        borderRadius: 3,
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+                        border: '1px solid rgba(7, 190, 184, 0.1)',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.12)'
+                        }
                       }}>
-                        Name
-                      </TableCell>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
-                      }}>
-                        Patient Number
-                      </TableCell>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
-                      }}>
-                        Email
-                      </TableCell>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
-                      }}>
-                        Phone
-                      </TableCell>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
-                      }}>
-                        Surgery Type
-                      </TableCell>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
-                      }}>
-                        Surgery Date
-                      </TableCell>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
-                      }}>
-                        Status
-                      </TableCell>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)'
-                      }}>
-                        Created
-                      </TableCell>
-                      <TableCell sx={{
-                        fontWeight: 600,
-                        color: '#1F2937',
-                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                        fontSize: '0.95rem',
-                        borderBottom: '2px solid rgba(7, 190, 184, 0.2)',
-                        textAlign: 'center'
-                      }}>
-                        Actions
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    <AnimatePresence>
-                      {filteredPatients.map((patient, index) => (
-                        <motion.tr
-                          key={patient.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 20 }}
-                          transition={{
-                            duration: 0.3,
-                            delay: index * 0.05,
-                            ease: [0.25, 0.46, 0.45, 0.94]
-                          }}
-                          whileHover={{
-                            backgroundColor: 'rgba(7, 190, 184, 0.05)',
-                            scale: 1.001,
-                            transition: { duration: 0.2 }
-                          }}
-                          style={{
-                            backgroundColor: index % 2 === 0 ? 'white' : 'rgba(7, 190, 184, 0.02)'
-                          }}
-                        >
-                          <TableCell sx={{
-                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                            fontWeight: 500
-                          }}>
-                            <Typography variant="body2" fontWeight="600" color="#1F2937">
-                              {patient.name}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{
-                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                            color: '#6B7280',
-                            fontWeight: 500
-                          }}>
-                            {patient.patientId || 'N/A'}
-                          </TableCell>
-                          <TableCell sx={{
-                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                            color: '#6B7280'
-                          }}>
-                            {patient.email}
-                          </TableCell>
-                          <TableCell sx={{
-                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                            color: '#6B7280'
-                          }}>
-                            {patient.phone}
-                          </TableCell>
-                          <TableCell sx={{
-                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                            fontWeight: 500
-                          }}>
-                            {patient.surgeryType || 'N/A'}
-                          </TableCell>
-                          <TableCell sx={{
-                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                            color: '#6B7280'
-                          }}>
-                            {patient.surgeryDate ? formatDate(patient.surgeryDate) : 'N/A'}
-                          </TableCell>
-                          <TableCell>
+                        <CardContent sx={{ p: 3 }}>
+                          {/* Header with Name and Status */}
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography
+                                variant="h6"
+                                component="h3"
+                                sx={{
+                                  fontWeight: 600,
+                                  color: '#1F2937',
+                                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                  mb: 0.5
+                                }}
+                              >
+                                {patient.name}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5
+                                }}
+                              >
+                                <PhoneIcon sx={{ fontSize: 16 }} />
+                                {patient.patientId || 'N/A'}
+                              </Typography>
+                            </Box>
                             <Chip
                               label={(patient.status || 'checked-in').replace('-', ' ')}
                               color={getStatusColor(patient.status || 'checked-in')}
@@ -855,79 +1108,149 @@ function PatientsPageContent() {
                                 }
                               }}
                             />
-                          </TableCell>
-                          <TableCell sx={{
-                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
-                            color: '#6B7280',
-                            fontSize: '0.875rem'
-                          }}>
-                            {patient.createdAt instanceof Date
-                              ? formatDate(patient.createdAt.toDate().toISOString())
-                              : formatDate(patient.createdAt.toDate().toISOString())
-                            }
-                          </TableCell>
-                          <TableCell sx={{ textAlign: 'center' }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                              <Tooltip title="Update Patient Status" arrow>
-                                <IconButton
-                                  onClick={() => handleEditPatient(patient)}
-                                  disabled={!patient.id}
+                          </Box>
+
+                          {/* Patient Details */}
+                          <Box sx={{ mb: 3 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
+                              <EmailIcon sx={{ fontSize: 18, color: '#6B7280' }} />
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                  fontSize: '0.875rem'
+                                }}
+                              >
+                                {patient.email}
+                              </Typography>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
+                              <PhoneIcon sx={{ fontSize: 18, color: '#6B7280' }} />
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                  fontSize: '0.875rem'
+                                }}
+                              >
+                                {patient.phone}
+                              </Typography>
+                            </Box>
+
+                            {patient.surgeryType && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
+                                <LocationIcon sx={{ fontSize: 18, color: '#6B7280' }} />
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
                                   sx={{
-                                    color: '#07BEB8',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(7, 190, 184, 0.1)',
-                                      transform: 'scale(1.1)'
-                                    },
-                                    transition: 'all 0.3s ease'
+                                    fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                    fontSize: '0.875rem'
                                   }}
-                                  aria-label={`Update status for ${patient.name}`}
                                 >
-                                  <UpdateIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Edit Patient Details" arrow>
-                                <IconButton
-                                  component={Link}
-                                  href={`/edit-patient/${patient.id}`}
-                                  disabled={!patient.id}
+                                  {patient.surgeryType}
+                                </Typography>
+                              </Box>
+                            )}
+
+                            {patient.surgeryDate && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
+                                <CalendarIcon sx={{ fontSize: 18, color: '#6B7280' }} />
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
                                   sx={{
-                                    color: '#059669',
-                                    '&:hover': {
-                                      backgroundColor: 'rgba(5, 150, 105, 0.1)',
-                                      transform: 'scale(1.1)'
-                                    },
-                                    transition: 'all 0.3s ease'
+                                    fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                    fontSize: '0.875rem'
                                   }}
-                                  aria-label={`Edit details for ${patient.name}`}
                                 >
-                                  <EditIcon />
-                                </IconButton>
-                              </Tooltip>
+                                  Surgery: {formatDate(patient.surgeryDate)}
+                                </Typography>
+                              </Box>
+                            )}
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, gap: 1 }}>
+                              <CalendarIcon sx={{ fontSize: 18, color: '#6B7280' }} />
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                  fontSize: '0.875rem'
+                                }}
+                              >
+                                Created: {patient.createdAt instanceof Date
+                                  ? formatDate(patient.createdAt.toDate().toISOString())
+                                  : formatDate(patient.createdAt.toDate().toISOString())
+                                }
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          {/* Action Buttons */}
+                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                            <Tooltip title="Update Patient Status" arrow>
                               <IconButton
-                                component={Link}
-                                href={`/delete-patient?id=${patient.id}`}
+                                onClick={() => handleEditPatient(patient)}
                                 disabled={!patient.id}
                                 sx={{
-                                  color: '#EF4444',
+                                  color: '#07BEB8',
                                   '&:hover': {
-                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    backgroundColor: 'rgba(7, 190, 184, 0.1)',
                                     transform: 'scale(1.1)'
                                   },
                                   transition: 'all 0.3s ease'
                                 }}
-                                aria-label={`Delete ${patient.name}`}
+                                aria-label={`Update status for ${patient.name}`}
                               >
-                                <DeleteIcon />
+                                <UpdateIcon />
                               </IconButton>
-                            </Box>
-                          </TableCell>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </MuiPaper>
+                            </Tooltip>
+                            <Tooltip title="Edit Patient Details" arrow>
+                              <IconButton
+                                component={Link}
+                                href={`/edit-patient/${patient.id}`}
+                                disabled={!patient.id}
+                                sx={{
+                                  color: '#059669',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                                    transform: 'scale(1.1)'
+                                  },
+                                  transition: 'all 0.3s ease'
+                                }}
+                                aria-label={`Edit details for ${patient.name}`}
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <IconButton
+                              component={Link}
+                              href={`/delete-patient?id=${patient.id}`}
+                              disabled={!patient.id}
+                              sx={{
+                                color: '#EF4444',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                  transform: 'scale(1.1)'
+                                },
+                                transition: 'all 0.3s ease'
+                              }}
+                              aria-label={`Delete ${patient.name}`}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </Box>
+            )}
           </>
         )}
 
