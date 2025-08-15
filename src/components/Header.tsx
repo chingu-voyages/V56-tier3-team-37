@@ -365,6 +365,25 @@ export default function Header() {
               >
                 Surgery Types
               </Typography>
+
+              {/* Chatbot Demo */}
+              <Typography
+                component={Link}
+                href="/chatbot-demo"
+                variant="body1"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: '1rem',
+                  color: 'white',
+                  opacity: 0.9,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    opacity: 1
+                  }
+                }}
+              >
+                Chatbot Demo
+              </Typography>
             </>
           )}
         </Box>

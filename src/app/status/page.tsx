@@ -35,8 +35,8 @@ declare module '@mui/material/Chip' {
         healing: true;
         success: true;
         dismissed: true;
-        }
     }
+}
 
 export default function StatusPage() {
     const { user, userRole, loading: authLoading } = useAuth();
@@ -173,6 +173,21 @@ export default function StatusPage() {
                             Public view - showing limited information for privacy
                         </Typography>
                     )}
+                    {isAuthenticated && (
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                                fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                fontSize: '0.9rem',
+                                mt: 1,
+                                fontStyle: 'italic',
+                                color: '#07BEB8'
+                            }}
+                        >
+                            Professional view - showing patient names and codes for efficient workflow
+                        </Typography>
+                    )}
                 </Box>
 
                 {error && (
@@ -260,18 +275,38 @@ export default function StatusPage() {
                                     <CardContent sx={{ p: 3 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                             {getStatusIcon(patient.status || 'checked-in')}
-                                            <Typography
-                                                variant="h6"
-                                                component="h2"
-                                                sx={{
-                                                    ml: 1,
-                                                    fontWeight: 600,
-                                                    color: '#1F2937',
-                                                    fontFamily: 'var(--font-roboto), Roboto, sans-serif'
-                                                }}
-                                            >
-                                                {isGuest ? `Patient ${patient.patientId || 'Loading...'}` : patient.name}
-                                            </Typography>
+                                            <Box sx={{ ml: 1 }}>
+                                                <Typography
+                                                    variant="h6"
+                                                    component="h2"
+                                                    sx={{
+                                                        fontWeight: 600,
+                                                        color: '#1F2937',
+                                                        fontFamily: 'var(--font-roboto), Roboto, sans-serif'
+                                                    }}
+                                                >
+                                                    {isGuest ? `Patient ${patient.patientId || 'Loading...'}` : patient.name}
+                                                </Typography>
+                                                {/* Show patient code for authenticated users */}
+                                                {isAuthenticated && patient.patientId && (
+                                                    <Typography
+                                                        variant="caption"
+                                                        sx={{
+                                                            color: '#07BEB8',
+                                                            fontWeight: 600,
+                                                            fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                                            backgroundColor: 'rgba(7, 190, 184, 0.1)',
+                                                            px: 1,
+                                                            py: 0.5,
+                                                            borderRadius: 1,
+                                                            display: 'inline-block',
+                                                            mt: 0.5
+                                                        }}
+                                                    >
+                                                        Code: {patient.patientId}
+                                                    </Typography>
+                                                )}
+                                            </Box>
                                         </Box>
 
                                         {/* Only show status for guests - no other information */}
@@ -343,6 +378,21 @@ export default function StatusPage() {
                                                         Surgery Date: {formatDate(patient.surgeryDate)}
                                                     </Typography>
                                                 )}
+
+                                                {/* Patient code note for authenticated users */}
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                    sx={{
+                                                        fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                                        fontSize: '0.75rem',
+                                                        fontStyle: 'italic',
+                                                        display: 'block',
+                                                        mt: 1
+                                                    }}
+                                                >
+                                                    💡 Use patient code "{patient.patientId}" in AI chatbot for quick status updates
+                                                </Typography>
                                             </>
                                         )}
                                     </CardContent>

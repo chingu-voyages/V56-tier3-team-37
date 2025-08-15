@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
 import { patientService } from '@/lib/patient-service';
+import { UserRole, getUserRole } from '@/lib/user-roles';
 
 // Initialize Gemini AI
 const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-// Enhanced system prompt with patient lookup capabilities
+// Enhanced system prompt with privacy-focused patient lookup capabilities
 const SYSTEM_PROMPT = `You are an AI assistant for Care Flow, a healthcare application that helps reduce stress during surgery by providing real-time updates and workflow transparency.
 
 Your role is to:
@@ -17,60 +18,44 @@ Your role is to:
 - Help users understand the surgery process and what to expect
 - Provide general health and wellness information
 - Assist with administrative questions about the healthcare system
-- **NEW: Look up patient status and surgery information when requested**
+- **NEW: Look up patient status and surgery information with strict privacy controls**
 
-Patient Lookup Capabilities:
-- When users ask about a specific patient (by name or ID), you can search the database
-- You can provide current surgery status, surgery type, and other relevant information
-- Always maintain patient privacy and only share appropriate information
-- If multiple patients match a search, ask for more specific information
+Patient Lookup Capabilities (PRIVACY-FOCUSED):
+- **ADMIN USERS ONLY**: Can search by patient name OR patient code, get direct results
+- **ALL OTHER USERS**: Can ONLY search by patient code (6-character alphanumeric)
+- Patient codes work like passwords - they provide secure access to patient information
+- **ADMIN PRIVILEGE**: Administrators can see patient names in responses for convenience
+- **GUEST RESTRICTION**: Guests must provide patient codes upfront to get any information
+- Always maintain appropriate privacy based on user role
+
+Privacy Rules:
+- For non-admin users: Only accept patient code searches (6-character format like ABC123)
+- For admin users: Accept both name and code searches, can show patient names in responses
+- For guests: Patient codes required upfront - no name-based searches allowed
+- Example: Admin sees "John Smith is currently in recovery", Guest sees "Patient ABC123 is currently in recovery"
+- **ROLE-BASED PRIVACY**: Different privacy levels based on user authentication
+- This provides convenience for admins while protecting guest privacy
 
 Important guidelines:
 - Always maintain a professional yet warm and reassuring tone
 - Never provide medical diagnoses or specific medical advice
-- Respect patient privacy - never ask for or share specific patient information unless explicitly requested
+- Respect patient privacy - this is CRITICAL for healthcare applications
 - If someone asks for medical advice, direct them to consult with healthcare professionals
 - Be culturally sensitive and respectful of diverse backgrounds
 - If you're unsure about medical information, recommend consulting a healthcare provider
 - Keep responses clear, simple, and free of unnecessary medical jargon
 - Focus on education and emotional support rather than medical treatment
-- **For patient lookups: Use the provided patient data to give helpful, reassuring updates**
+- **For patient lookups: Use role-appropriate privacy levels**
+- **Admins**: Can show patient names for convenience
+- **Guests**: Always use patient codes, never names
 
-Your responses should be helpful, accurate, and comforting while maintaining appropriate medical ethics and boundaries.`;
+Your responses should be helpful, accurate, and comforting while maintaining appropriate privacy levels based on user role.`;
 
-// Function to extract patient search queries from user messages
-function extractPatientQuery(message: string): { type: 'name' | 'id' | null; query: string | null } {
+// Function to extract patient search queries from user messages with role-based restrictions
+function extractPatientQuery(message: string, userRole: UserRole): { type: 'name' | 'id' | null; query: string | null; allowed: boolean } {
   const messageLower = message.toLowerCase();
   
-  // Check for patient name patterns FIRST - improved to catch more natural language
-  const namePatterns = [
-    // Direct name mentions (most common case) - check this first
-    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/,
-    // Natural language patterns
-    /(?:how is|how's)\s+([a-zA-Z\s]+)\s+(?:doing|feeling|recovering)/i,
-    /(?:tell me about|give me info on|info about)\s+([a-zA-Z\s]+)/i,
-    /(?:patient|surgery|status)\s+(?:for|of|about)\s+([a-zA-Z\s]+)/i,
-    /(?:how is|what is the status of|check status for)\s+([a-zA-Z\s]+)/i,
-    /(?:look up|find|search for)\s+([a-zA-Z\s]+)/i
-  ];
-  
-  for (const pattern of namePatterns) {
-    const match = message.match(pattern);
-    if (match && match[1]) {
-      let name = match[1].trim();
-      
-      // Clean up the name by removing common prefixes/suffixes
-      name = name.replace(/^(patient|surgery|status|check|look|find|search|info|about|for|of|on)\s+/i, '');
-      name = name.replace(/\s+(patient|surgery|status|check|look|find|search|info|about|for|of|on)$/i, '');
-      
-      if (name.length > 1) {
-        return { type: 'name', query: name };
-      }
-    }
-  }
-  
-  // Check for patient ID patterns (6-character alphanumeric) - only if no name found
-  // Make it more specific to avoid matching parts of names
+  // Check for patient ID patterns first (6-character alphanumeric) - always allowed
   const patientIdMatch = message.match(/\b[A-Z0-9]{6}\b/i);
   if (patientIdMatch) {
     // Double-check that this isn't part of a name
@@ -82,23 +67,53 @@ function extractPatientQuery(message: string): { type: 'name' | 'id' | null; que
     const hasLettersAfter = /^\s*[a-zA-Z]+\b/.test(afterMatch);
     
     if (!hasLettersBefore && !hasLettersAfter) {
-      return { type: 'id', query: patientIdMatch[0].toUpperCase() };
+      return { type: 'id', query: patientIdMatch[0].toUpperCase(), allowed: true };
     }
   }
   
-  return { type: null, query: null };
+  // Check for patient name patterns - ONLY allowed for ADMIN users
+  if (userRole === UserRole.ADMIN) {
+    const namePatterns = [
+      // Direct name mentions (most common case)
+      /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\b/,
+      // Natural language patterns
+      /(?:how is|how's)\s+([a-zA-Z\s]+)\s+(?:doing|feeling|recovering)/i,
+      /(?:tell me about|give me info on|info about)\s+([a-zA-Z\s]+)/i,
+      /(?:patient|surgery|status)\s+(?:for|of|about)\s+([a-zA-Z\s]+)/i,
+      /(?:how is|what is the status of|check status for)\s+([a-zA-Z\s]+)/i,
+      /(?:look up|find|search for)\s+([a-zA-Z\s]+)/i
+    ];
+    
+    for (const pattern of namePatterns) {
+      const match = message.match(pattern);
+      if (match && match[1]) {
+        let name = match[1].trim();
+        
+        // Clean up the name by removing common prefixes/suffixes
+        name = name.replace(/^(patient|surgery|status|check|look|find|search|info|about|for|of|on)\s+/i, '');
+        name = name.replace(/\s+(patient|surgery|status|check|look|find|search|info|about|for|of|on)$/i, '');
+        
+        if (name.length > 1) {
+          return { type: 'name', query: name, allowed: true };
+        }
+      }
+    }
+  }
+  
+  // If we get here, no valid search query was found
+  return { type: null, query: null, allowed: false };
 }
 
-// Function to search for patients
-async function searchPatientData(searchTerm: string, searchType: 'name' | 'id'): Promise<any> {
+// Function to search for patients with privacy controls
+async function searchPatientData(searchTerm: string, searchType: 'name' | 'id', userRole: UserRole): Promise<any> {
   try {
     if (searchType === 'id') {
-      // Search by patient ID
+      // Search by patient ID - always allowed
       const patients = await patientService.getPatients();
       const patient = patients.find(p => p.patientId === searchTerm);
       return patient ? { found: true, patient, type: 'single' } : { found: false };
-    } else {
-      // Search by name - improved matching logic
+    } else if (searchType === 'name' && userRole === UserRole.ADMIN) {
+      // Search by name - only for admin users
       const patients = await patientService.getPatients();
       const searchLower = searchTerm.toLowerCase().trim();
       
@@ -143,6 +158,9 @@ async function searchPatientData(searchTerm: string, searchType: 'name' | 'id'):
       } else {
         return { found: true, patients: matchingPatients, type: 'multiple' };
       }
+    } else {
+      // Name search not allowed for non-admin users
+      return { found: false, error: 'Name search not allowed for your role' };
     }
   } catch (error) {
     console.error('Error searching patient data:', error);
@@ -153,7 +171,7 @@ async function searchPatientData(searchTerm: string, searchType: 'name' | 'id'):
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message } = body;
+    const { message, userRole = UserRole.GUEST } = body;
 
     if (!message) {
       return NextResponse.json(
@@ -171,66 +189,96 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if this is a patient lookup request
-    const patientQuery = extractPatientQuery(message);
+    // Check if this is a patient lookup request with role-based restrictions
+    const patientQuery = extractPatientQuery(message, userRole);
     let patientData = null;
     let enhancedPrompt = SYSTEM_PROMPT;
 
-    if (patientQuery.query && patientQuery.type) {
+    if (patientQuery.query && patientQuery.type && patientQuery.allowed) {
       // Search for patient data
-      patientData = await searchPatientData(patientQuery.query, patientQuery.type);
+      patientData = await searchPatientData(patientQuery.query, patientQuery.type, userRole);
       
       if (patientData && patientData.found) {
         if (patientData.type === 'single' && patientData.patient) {
           const patient = patientData.patient;
+          // Enhanced prompt with role-based patient information
           enhancedPrompt += `\n\nPATIENT DATA FOUND:
 Patient Name: ${patient.firstName || patient.name || 'Unknown'} ${patient.lastName || ''}
-Patient ID: ${patient.patientId || 'Unknown'}
+Patient Code: ${patient.patientId || 'Unknown'}
 Current Status: ${patient.status || 'Unknown'}
 Surgery Type: ${patient.surgeryType || 'Not specified'}
 Surgery Date: ${patient.surgeryDate || 'Not specified'}
 Notes: ${patient.notes || 'None'}
 
-Use this information to provide a helpful and reassuring response about the patient's current status.`;
+PRIVACY RULES BASED ON USER ROLE:
+- **ADMIN USERS**: You can mention the patient's name for convenience
+- **GUEST USERS**: Always use "Patient [CODE]" format, never mention names
+- Use this information to provide a helpful and reassuring response about the patient's current status
+- Adjust privacy level based on user role: ${userRole === UserRole.ADMIN ? 'Admin (can show names)' : 'Guest (code-only)'}`;
         } else if (patientData.type === 'multiple' && patientData.patients && Array.isArray(patientData.patients)) {
-          const patientNames = patientData.patients.map((p: any) => 
-            `${p.firstName || p.name || 'Unknown'} ${p.lastName || ''} (ID: ${p.patientId || 'Unknown'})`
-          ).join(', ');
-          
-          enhancedPrompt += `\n\nMULTIPLE PATIENTS FOUND:
+          if (userRole === UserRole.ADMIN) {
+            const patientNames = patientData.patients.map((p: any) => 
+              `${p.firstName || p.name || 'Unknown'} ${p.lastName || ''} (${p.patientId || 'Unknown'})`
+            ).join(', ');
+            
+            enhancedPrompt += `\n\nMULTIPLE PATIENTS FOUND:
 ${patientNames}
 
 Ask the user to provide more specific information to identify the correct patient.`;
+          } else {
+            const patientCodes = patientData.patients.map((p: any) => 
+              `Patient ${p.patientId || 'Unknown'}`
+            ).join(', ');
+            
+            enhancedPrompt += `\n\nMULTIPLE PATIENTS FOUND:
+${patientCodes}
+
+Ask the user to provide the specific patient code to identify the correct patient.`;
+          }
         }
       } else {
-        enhancedPrompt += `\n\nNO PATIENT FOUND:
-The search for "${patientQuery.query}" did not return any results. Politely inform the user that no patient was found and suggest they check the spelling or provide more information.`;
+        if (patientData?.error === 'Name search not allowed for your role') {
+          enhancedPrompt += `\n\nSEARCH RESTRICTION:
+The user attempted to search by name, but this feature is only available to administrators for privacy reasons.
+
+Inform the user that:
+- For privacy and security, patient searches by name are restricted to administrators
+- They can search using their patient code (6-character format like ABC123)
+- Patient codes work like passwords and provide secure access to their information
+- This protects patient privacy and prevents unauthorized access to medical records`;
+        } else {
+          enhancedPrompt += `\n\nNO PATIENT FOUND:
+The search for "${patientQuery.query}" did not return any results. 
+
+If searching by patient code:
+- Politely inform the user that no patient was found with that code
+- Suggest they check the code spelling or contact hospital staff
+- Remind them that patient codes are 6-character alphanumeric (e.g., ABC123)
+
+If searching by name (admin only):
+- Politely inform the user that no patient was found with that name
+- Suggest they check the spelling or provide more specific information`;
+        }
       }
+    } else if (patientQuery.query && !patientQuery.allowed) {
+      // Search attempted but not allowed for this role
+      enhancedPrompt += `\n\nSEARCH RESTRICTION DETECTED:
+The user attempted to search by name, but this feature is restricted to administrators for privacy reasons.
+
+Inform the user that:
+- For privacy and security, patient searches by name are restricted to administrators
+- They can search using their patient code (6-character format like ABC123)
+- Patient codes work like passwords and provide secure access to their information
+- This protects patient privacy and prevents unauthorized access to medical records
+- If they need to search by name, they should contact an administrator`;
     }
 
     // Log the received message (for debugging)
     console.log('Received message:', message);
+    console.log('User role:', userRole);
     if (patientQuery.query) {
       console.log('Patient query detected:', patientQuery);
       console.log('Patient data found:', patientData);
-      
-      // Additional debug logging for patient search
-      if (patientQuery.type === 'name') {
-        const allPatients = await patientService.getPatients();
-        console.log('All patients in database:', allPatients.map(p => ({
-          id: p.id,
-          name: p.name,
-          firstName: p.firstName,
-          lastName: p.lastName,
-          patientId: p.patientId,
-          status: p.status
-        })));
-        console.log('Search term:', patientQuery.query);
-        
-        // Test the search function directly
-        const testSearch = await searchPatientData(patientQuery.query, patientQuery.type);
-        console.log('Direct search test result:', testSearch);
-      }
     }
 
     try {
@@ -259,26 +307,36 @@ The search for "${patientQuery.query}" did not return any results. Politely info
           query: patientQuery.query,
           type: patientQuery.type,
           found: patientData?.found || false,
-          resultType: patientData?.type || null
+          resultType: patientData?.type || null,
+          allowed: patientQuery.allowed
         } : null
       });
 
     } catch (geminiError) {
       console.error('Gemini API error:', geminiError);
       
-      // Enhanced fallback response
+      // Enhanced fallback response with privacy focus
       let fallbackResponse = `I apologize, but I'm having trouble processing your request right now. `;
       
       if (patientQuery.query && patientData?.found) {
-        // If we found patient data but AI failed, provide basic info
+        // If we found patient data but AI failed, provide basic info with role-based privacy
         if (patientData.type === 'single' && patientData.patient) {
           const patient = patientData.patient;
-          fallbackResponse += `However, I did find information about ${patient.firstName || patient.name || 'Unknown'} ${patient.lastName || ''}:\n\n`;
+          if (userRole === UserRole.ADMIN) {
+            fallbackResponse += `However, I did find information about ${patient.firstName || patient.name || 'Unknown'} ${patient.lastName || ''}:\n\n`;
+          } else {
+            fallbackResponse += `However, I did find information about Patient ${patient.patientId || 'Unknown'}:\n\n`;
+          }
           fallbackResponse += `• Current Status: ${patient.status || 'Unknown'}\n`;
-          fallbackResponse += `• Patient ID: ${patient.patientId || 'Unknown'}\n`;
+          if (userRole === UserRole.ADMIN) {
+            fallbackResponse += `• Patient Name: ${patient.firstName || patient.name || 'Unknown'} ${patient.lastName || ''}\n`;
+          }
+          fallbackResponse += `• Patient Code: ${patient.patientId || 'Unknown'}\n`;
           if (patient.surgeryType) fallbackResponse += `• Surgery Type: ${patient.surgeryType}\n`;
           if (patient.surgeryDate) fallbackResponse += `• Surgery Date: ${patient.surgeryDate}\n`;
         }
+      } else if (patientQuery.query && !patientQuery.allowed) {
+        fallbackResponse += `\n\nFor privacy and security, patient searches by name are restricted to administrators. You can search using your patient code (6-character format like ABC123).`;
       }
       
       fallbackResponse += `\n\nPlease try again in a moment, or feel free to ask a different question about healthcare, surgery procedures, or general medical information.`;
@@ -291,7 +349,8 @@ The search for "${patientQuery.query}" did not return any results. Politely info
           query: patientQuery.query,
           type: patientQuery.type,
           found: patientData?.found || false,
-          resultType: patientData?.type || null
+          resultType: patientData?.type || null,
+          allowed: patientQuery.allowed
         } : null
       });
     }
@@ -309,8 +368,15 @@ The search for "${patientQuery.query}" did not return any results. Politely info
 // Optional: Handle GET requests (for testing)
 export async function GET() {
   return NextResponse.json({
-    message: 'Chat API is running with Gemini Pro integration and Patient Lookup!',
+    message: 'Chat API is running with Gemini Pro integration and Enhanced Privacy Controls!',
     timestamp: new Date().toISOString(),
-    status: 'active'
+    status: 'active',
+    features: [
+      'Role-based patient search access',
+      'Admin: Name or code search',
+      'Guests: Code-only search',
+      'Patient privacy protection',
+      'Patient code-based responses'
+    ]
   });
 }

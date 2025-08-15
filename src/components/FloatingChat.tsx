@@ -22,6 +22,8 @@ import {
     Fullscreen as MaximizeIcon,
     FullscreenExit as MinimizeIcon
 } from '@mui/icons-material';
+import { useAuth } from '@/lib/auth-context';
+import { UserRole } from '@/lib/user-roles';
 
 interface Message {
     id: string;
@@ -33,16 +35,18 @@ interface Message {
         type: 'name' | 'id';
         found: boolean;
         resultType: 'single' | 'multiple' | null;
+        allowed?: boolean;
     } | null;
 }
 
 export default function FloatingChat() {
+    const { userRole } = useAuth();
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            text: 'Hello! I\'m your AI assistant. I can help you with healthcare questions, surgery information, and even look up patient status by name or ID. How can I help you today?',
+            text: 'Hello! I\'m your AI assistant. I can help you with healthcare questions, surgery information, and patient status lookups. For privacy, I can only search by patient codes (6-character format like ABC123). How can I help you today?',
             sender: 'ai',
             timestamp: new Date()
         }
@@ -56,6 +60,29 @@ export default function FloatingChat() {
     const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const visibilityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const lastUserActivityRef = useRef<number>(Date.now());
+
+    // Update welcome message based on user role
+    useEffect(() => {
+        if (userRole === UserRole.ADMIN) {
+            setMessages(prev => prev.map(msg =>
+                msg.id === '1'
+                    ? { ...msg, text: 'Hello Admin! I\'m your AI assistant. I can help you with healthcare questions, surgery information, and patient status lookups. As an administrator, you can search by patient names or codes and get direct results. How can I help you today?' }
+                    : msg
+            ));
+        } else if (userRole === UserRole.SURGICAL_TEAM) {
+            setMessages(prev => prev.map(msg =>
+                msg.id === '1'
+                    ? { ...msg, text: 'Hello Surgical Team! I\'m your AI assistant. I can help you with healthcare questions, surgery information, and patient status lookups. For privacy, I can only search by patient codes (6-character format like ABC123). How can I help you today?' }
+                    : msg
+            ));
+        } else {
+            setMessages(prev => prev.map(msg =>
+                msg.id === '1'
+                    ? { ...msg, text: 'Hello! I\'m your AI assistant. I can help you with healthcare questions, surgery information, and patient status lookups. For privacy, I can only search by patient codes (6-character format like ABC123). How can I help you today?' }
+                    : msg
+            ));
+        }
+    }, [userRole]);
 
     const handleSendMessage = async () => {
         if (!inputMessage.trim()) return;
@@ -77,7 +104,10 @@ export default function FloatingChat() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: inputMessage }),
+                body: JSON.stringify({
+                    message: inputMessage,
+                    userRole: userRole
+                }),
             });
 
             if (!response.ok) {
@@ -339,7 +369,10 @@ export default function FloatingChat() {
                                                 AI Assistant
                                             </Typography>
                                             <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                                Ask me anything! I can also look up patient status.
+                                                {userRole === UserRole.ADMIN
+                                                    ? "Ask me anything! I can look up patient status by name or code and get direct results."
+                                                    : "Ask me anything! I can look up patient status by code only."
+                                                }
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -424,18 +457,23 @@ export default function FloatingChat() {
                                                             <Box sx={{
                                                                 mb: 1,
                                                                 p: 1,
-                                                                backgroundColor: message.patientQuery.found ? '#D1FAE5' : '#FEE2E2',
+                                                                backgroundColor: message.patientQuery.allowed === false ? '#FEF3C7' :
+                                                                    message.patientQuery.found ? '#D1FAE5' : '#FEE2E2',
                                                                 borderRadius: 1,
-                                                                border: `1px solid ${message.patientQuery.found ? '#10B981' : '#EF4444'}`
+                                                                border: `1px solid ${message.patientQuery.allowed === false ? '#F59E0B' :
+                                                                    message.patientQuery.found ? '#10B981' : '#EF4444'}`
                                                             }}>
                                                                 <Typography variant="caption" sx={{
                                                                     fontWeight: 600,
-                                                                    color: message.patientQuery.found ? '#065F46' : '#991B1B'
+                                                                    color: message.patientQuery.allowed === false ? '#92400E' :
+                                                                        message.patientQuery.found ? '#065F46' : '#991B1B'
                                                                 }}>
                                                                     🔍 Patient Lookup: {message.patientQuery.query}
-                                                                    {message.patientQuery.found
-                                                                        ? ` - ${message.patientQuery.resultType === 'single' ? 'Found' : 'Multiple matches'}`
-                                                                        : ' - Not found'
+                                                                    {message.patientQuery.allowed === false
+                                                                        ? ' - Search restricted (code only)'
+                                                                        : message.patientQuery.found
+                                                                            ? ` - ${message.patientQuery.resultType === 'single' ? 'Found' : 'Multiple matches'}`
+                                                                            : ' - Not found'
                                                                     }
                                                                 </Typography>
                                                             </Box>
@@ -500,7 +538,10 @@ export default function FloatingChat() {
                                 <Box sx={{ display: 'flex', gap: 1 }}>
                                     <TextField
                                         fullWidth
-                                        placeholder="Type your message... (e.g., 'How is John Smith?' or 'Check status for ABC123')"
+                                        placeholder={userRole === UserRole.ADMIN
+                                            ? "Type your message... (e.g., 'How is John Smith?' or 'Check ABC123')"
+                                            : "Type your message... (e.g., 'Check ABC123' - patient codes only)"
+                                        }
                                         value={inputMessage}
                                         onChange={(e) => setInputMessage(e.target.value)}
                                         onKeyPress={handleKeyPress}
