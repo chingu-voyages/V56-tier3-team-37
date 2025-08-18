@@ -40,8 +40,10 @@ V56-tier3-team-37/
     │   │   └── page.tsx       # Authentication page (/auth)
     │   ├── patients/
     │   │   └── page.tsx       # Patient list page (/patients)
-    │   └── add-patient/
-    │       └── page.tsx       # Add patient form (/add-patient)
+    │   ├── add-patient/
+    │   │   └── page.tsx       # Add patient form (/add-patient)
+    │   └── chatbot-demo/
+    │       └── page.tsx       # Chatbot privacy demo page (/chatbot-demo)
     ├── components/            # Reusable UI components
     │   ├── Header.tsx         # Navigation header (BEM)
     │   ├── MobileHeader.tsx   # Mobile navigation with animated hamburger
@@ -54,6 +56,70 @@ V56-tier3-team-37/
         ├── surgery-types.ts   # Standardized surgery types and utilities
         └── patient-service.ts # Patient data management service
 ```
+
+## 🔒 Enhanced AI Chatbot with Privacy Controls
+
+### Overview
+The Care Flow AI chatbot now features advanced privacy controls and role-based access management to protect patient information while maintaining helpful functionality.
+
+### Privacy Features
+- **Role-Based Access Control**: Different search capabilities based on user roles
+- **Patient Code Protection**: Patient codes work like passwords for secure access
+- **Name Search Restrictions**: Only administrators can search by patient names
+- **Anonymous Responses**: AI never reveals patient names, only patient codes
+- **Secure Communication**: All patient information is shared using code references
+- **Personalized Experience**: Role-based greetings for enhanced user experience
+- **Status Page Integration**: Patient codes displayed for admin/surgical team users
+
+### User Role Capabilities
+
+#### 🔑 Administrators
+- ✅ Can search patients by name OR patient code
+- ✅ Full access to patient lookup features
+- ✅ Can see patient names in responses for convenience
+- 🔓 Administrative privileges for efficient workflow
+- 👋 Personalized greeting: "Hello Admin!"
+
+#### 👥 Surgical Team
+- ❌ Cannot search patients by name
+- ✅ Can search patients by code only
+- 🔒 Limited access: names and codes only (no surgery details)
+- 🔄 Can update patient status
+- 👋 Personalized greeting: "Hello Surgical Team!"
+
+#### 👤 Guests
+- ❌ Cannot search patients by name
+- ✅ Can search patients by code only
+- 🔒 Restricted access for privacy
+- 🔐 Patient codes work like passwords
+- 👋 Standard greeting: "Hello! I'm your AI assistant..."
+
+### How It Works
+1. **Patient Code System**: Each patient gets a unique 6-character alphanumeric code (e.g., ABC123)
+2. **Privacy-First Responses**: AI responds with "Patient ABC123 is in recovery" instead of "John Smith is in recovery"
+3. **Role Enforcement**: System automatically restricts search capabilities based on user authentication
+4. **Secure Access**: Only those with the patient code can access information
+
+### Example Scenarios
+- **Admin**: "How is John Smith?" → Searches by name, responds with "John Smith is currently in recovery"
+- **Guest**: "How is John Smith?" → Blocked, explains code-only requirement
+- **Any User**: "Check ABC123" → Searches by code, responds with "Patient ABC123 is..." (guests) or "John Smith is currently in recovery" (admins)
+
+### Personalized Greetings
+- **Administrator**: "Hello Admin! I'm your AI assistant..."
+- **Surgical Team**: "Hello Surgical Team! I'm your AI assistant..."
+- **Guest**: "Hello! I'm your AI assistant..." (standard greeting)
+
+### Demo Page
+Visit `/chatbot-demo` to test the enhanced privacy features in real-time with different user roles.
+
+### Patient Status Page
+Visit `/status` to see role-based patient information display:
+- **Administrators**: See patient names, codes, surgery details, and helpful chatbot integration tips
+- **Surgical Team**: See patient names and codes only (for status updates)
+- **Guests**: See only patient codes and status for privacy protection
+
+---
 
 ## 🏥 Standardized Surgery Types
 
@@ -98,6 +164,7 @@ The autocomplete component is integrated into:
 ✅ **Enhances Safety**: Clear, unambiguous procedure names  
 ✅ **Clean UX Design**: Category-level icons prevent visual clutter  
 ✅ **Professional Appearance**: Medical-grade interface following UX best practices  
+✅ **Sophisticated Animations**: Intelligent robot animations for engagement  
 
 ## 🎨 Material UI Theme & BEM Methodology
 

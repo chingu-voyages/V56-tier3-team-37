@@ -111,7 +111,9 @@ export default function StatusPage() {
     };
 
     // Check user role using the enum
-    const isAuthenticated = userRole === UserRole.ADMIN || userRole === UserRole.SURGICAL_TEAM;
+    const isAdmin = userRole === UserRole.ADMIN;
+    const isSurgicalTeam = userRole === UserRole.SURGICAL_TEAM;
+    const isAuthenticated = isAdmin || isSurgicalTeam;
     const isGuest = userRole === UserRole.GUEST;
 
     // Debug logging
@@ -173,7 +175,7 @@ export default function StatusPage() {
                             Public view - showing limited information for privacy
                         </Typography>
                     )}
-                    {isAuthenticated && (
+                    {isAdmin && (
                         <Typography
                             variant="body2"
                             color="text.secondary"
@@ -185,7 +187,22 @@ export default function StatusPage() {
                                 color: '#07BEB8'
                             }}
                         >
-                            Professional view - showing patient names and codes for efficient workflow
+                            Administrative view - full access to patient information and codes
+                        </Typography>
+                    )}
+                    {isSurgicalTeam && (
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                                fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                fontSize: '0.9rem',
+                                mt: 1,
+                                fontStyle: 'italic',
+                                color: '#F59E0B'
+                            }}
+                        >
+                            Surgical team view - patient names and codes for status updates only
                         </Typography>
                     )}
                 </Box>
@@ -352,8 +369,8 @@ export default function StatusPage() {
                                             />
                                         </Box>
 
-                                        {/* Only show additional info for authenticated users */}
-                                        {isAuthenticated && (
+                                        {/* Show different info based on user role */}
+                                        {isAdmin && (
                                             <>
                                                 <Typography
                                                     variant="body2"
@@ -379,7 +396,7 @@ export default function StatusPage() {
                                                     </Typography>
                                                 )}
 
-                                                {/* Patient code note for authenticated users */}
+                                                {/* Patient code note for admin users */}
                                                 <Typography
                                                     variant="caption"
                                                     color="text.secondary"
@@ -394,6 +411,24 @@ export default function StatusPage() {
                                                     💡 Use patient code "{patient.patientId}" in AI chatbot for quick status updates
                                                 </Typography>
                                             </>
+                                        )}
+
+                                        {/* Limited info for surgical team - only patient code note */}
+                                        {isSurgicalTeam && (
+                                            <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                                sx={{
+                                                    fontFamily: 'var(--font-roboto), Roboto, sans-serif',
+                                                    fontSize: '0.75rem',
+                                                    fontStyle: 'italic',
+                                                    display: 'block',
+                                                    mt: 1,
+                                                    color: '#F59E0B'
+                                                }}
+                                            >
+                                                🔄 Use patient code "{patient.patientId}" for status updates
+                                            </Typography>
                                         )}
                                     </CardContent>
                                 </Card>
